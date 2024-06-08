@@ -1,0 +1,6 @@
+# env files
+/.vscode
+
+# project directories
+/target
+/src/data
