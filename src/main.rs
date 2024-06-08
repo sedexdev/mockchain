@@ -1,6 +1,9 @@
 // modules
 mod mods;
 
+// imports
+use crate::mods::helpers::init;
+
 fn main() {
-    println!("Hello, Mockchain V2!");
+    init(false);
 }
