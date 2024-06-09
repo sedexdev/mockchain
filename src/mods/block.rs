@@ -2,7 +2,7 @@
 use serde::Serialize;
 use serde_json::Value;
 
-/// Creates a block to append to the chain
+/// Defines a block to append to the chain
 /// 
 /// # Fields
 /// ```
@@ -16,7 +16,7 @@ use serde_json::Value;
 /// 
 /// # Derives
 /// ```
-/// serde::{Serialize, Deserialize}
+/// serde::Serialize, Debug
 /// ```
 #[derive(Serialize, Debug)]
 pub struct Block {
