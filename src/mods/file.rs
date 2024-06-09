@@ -4,7 +4,7 @@ use std::path::Path;
 
 // 3rd party crates
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{to_value, Value};
 
 /// File operations for working with JSON
 /// 
@@ -36,7 +36,7 @@ impl FileOps {
     /// ```
     /// bool
     /// ```
-    pub fn exists(path: &str) -> bool {
+    pub fn _exists(path: &str) -> bool {
         Path::new(path).exists()
     }
     
@@ -57,16 +57,20 @@ impl FileOps {
     /// Nothing
     /// 
     pub fn write<T: Serialize>(path: &str, base: &str, obj: T) {
-        let mut deserialized = FileOps::parse(path);
-        let data = match serde_json::to_string(&obj) {
+        // convert the obj into a serde_json::Value
+        let value = match to_value(&obj) {
             Ok(val) => val,
-            Err(_) => String::from("FAILED"),
+            Err(_) => Value::String(String::from("result: failed")),
         };
-        if data == "FAILED" {
+        if value.as_str() == Some("result: failed") {
             println!("Failed to convert file at '{}' to JSON string", path);
         } else {
-            deserialized[base].as_array_mut().unwrap().push(json!(data));
-            fs::write(path, deserialized.to_string()).expect("File write filed");
+            // parse data from base file
+            let mut base_data = FileOps::parse(path);
+            // convert base array into mut Vec and push on the converted obj
+            base_data[base].as_array_mut().unwrap().push(value);
+            // write data back to file (full overwrite with new data appended) 
+            fs::write(path, base_data.to_string()).expect("Failed to write file");
         }
     }
 
