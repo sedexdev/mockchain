@@ -22,15 +22,7 @@ use serde_json::Value;
 /// ```
 #[derive(Serialize, Debug)]
 pub struct Blockchain {
-    blockchain: [Value; 0]
-}
-
-impl Blockchain {
-    pub fn new() -> Blockchain {
-        Blockchain {
-            blockchain: []
-        }
-    }
+    pub blockchain: [Value; 0]
 }
 
 /// Transactions base structure
@@ -49,15 +41,7 @@ impl Blockchain {
 /// ```
 #[derive(Serialize, Debug)]
 pub struct Transactions {
-    transactions: [Value; 0]
-}
-
-impl Transactions {
-    pub fn new() -> Transactions {
-        Transactions {
-            transactions: []
-        }
-    }
+    pub transactions: [Value; 0]
 }
 
 /// Wallets base structure
@@ -76,15 +60,7 @@ impl Transactions {
 /// ```
 #[derive(Serialize, Debug)]
 pub struct Wallets {
-    wallets: [Value; 0]
-}
-
-impl Wallets {
-    pub fn new() -> Wallets {
-        Wallets {
-            wallets: []
-        }
-    }
+    pub wallets: [Value; 0]
 }
 
 /// Keypairs base structure
@@ -103,13 +79,5 @@ impl Wallets {
 /// ```
 #[derive(Serialize, Debug)]
 pub struct KeyPairs {
-    keypairs: [Value; 0]
-}
-
-impl KeyPairs {
-    pub fn new() -> KeyPairs {
-        KeyPairs {
-            keypairs: []
-        }
-    }
+    pub keypairs: [Value; 0]
 }

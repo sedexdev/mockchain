@@ -7,13 +7,12 @@ use chrono::{Timelike, Utc};
 // imports
 use crate::mods::block::Block;
 use crate::mods::file::FileOps;
-use crate::mods::helpers::init;
 
 // constants
 const BLOCKCHAIN_PATH: &str = "./src/data/blockchain.json";
 
 fn main() {
-    init(false);
+    FileOps::init(false);
 
     let dt = Utc::now();
     let timestamp = match dt.with_hour(dt.hour() + 1) {

@@ -4,7 +4,16 @@ use std::path::Path;
 
 // 3rd party crates
 use serde::Serialize;
-use serde_json::{to_value, Value};
+use serde_json::{to_string, to_value, Value};
+
+// imports
+use crate::mods::base::{Blockchain, KeyPairs, Transactions, Wallets};
+
+// constants
+const BLOCKCHAIN_PATH: &str = "./src/data/blockchain.json";
+const TRANSACTIONS_PATH: &str = "./src/data/transactions.json";
+const WALLETS_PATH: &str = "./src/data/wallets.json";
+const KEYPAIRS_PATH: &str = "./src/data/keypairs.json";
 
 /// File operations for working with JSON
 /// 
@@ -22,6 +31,37 @@ use serde_json::{to_value, Value};
 pub struct FileOps {}
 
 impl FileOps {
+
+    /// Initializes the data files when a user first 
+    /// runs the app or decides to re-initialize the 
+    /// blockchain
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// preserve_accounts: bool -> option to preserve wallet and key data
+    /// ```
+    /// 
+    /// # Returns
+    /// Nothing
+    pub fn init(preserve_accounts: bool) {
+        let bc = to_string(&Blockchain {blockchain: []}).unwrap();
+        fs::write(BLOCKCHAIN_PATH, bc).expect("[-] Failed to write blockchain.json");
+        
+        let t = to_string(&Transactions {transactions: []}).unwrap();
+        fs::write(TRANSACTIONS_PATH, t).expect("[-] Failed to write transactions.json");
+        
+        if !preserve_accounts {
+            let w = to_string(&Wallets {wallets: []}).unwrap();
+            fs::write(WALLETS_PATH, w).expect("[-] Failed to write wallets.json");
+            
+            let kp = to_string(&KeyPairs {keypairs: []}).unwrap();
+            fs::write(KEYPAIRS_PATH, kp).expect("[-] Failed to write keypairs.json");
+        }
+    }
+
     /// Check if a file already exists
     /// 
     /// # Visibility
