@@ -8,12 +8,12 @@ use serde_json::{to_string, to_value, Value};
 
 // imports
 use crate::mods::base::{Blockchain, KeyPairs, Transactions, Wallets};
-
-// constants
-const BLOCKCHAIN_PATH: &str = "./src/data/blockchain.json";
-const TRANSACTIONS_PATH: &str = "./src/data/transactions.json";
-const WALLETS_PATH: &str = "./src/data/wallets.json";
-const KEYPAIRS_PATH: &str = "./src/data/keypairs.json";
+use crate::mods::constants::{
+    BLOCKCHAIN_PATH,
+    KEYPAIRS_PATH,
+    TRANSACTIONS_PATH,
+    WALLETS_PATH
+};
 
 /// File operations for working with JSON
 /// 
