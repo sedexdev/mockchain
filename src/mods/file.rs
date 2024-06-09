@@ -58,7 +58,7 @@ impl FileOps {
     /// 
     pub fn write<T: Serialize>(path: &str, base: &str, obj: T) {
         // convert the obj into a serde_json::Value
-        let value = match serde_json::to_value(&obj) {
+        let value = match to_value(&obj) {
             Ok(val) => val,
             Err(_) => Value::String(String::from("result: failed")),
         };
