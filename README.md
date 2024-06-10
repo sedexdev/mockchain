@@ -21,3 +21,5 @@ This tool is educational, exposes all data to the user so they can see what is g
 # Usage
 
 # License
+
+[MIT][https://github.com/sedexdev/mockchain_v2/blob/main/LICENSE]
