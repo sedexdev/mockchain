@@ -8,12 +8,6 @@ use serde_json::{to_string, to_value, Value};
 
 // imports
 use crate::mods::base::{Blockchain, KeyPairs, Transactions, Wallets};
-use crate::mods::constants::{
-    BLOCKCHAIN_PATH,
-    KEYPAIRS_PATH,
-    TRANSACTIONS_PATH,
-    WALLETS_PATH
-};
 
 /// File operations for working with JSON
 /// 
@@ -42,23 +36,31 @@ impl FileOps {
     /// # Args
     /// ```
     /// preserve_accounts: bool -> option to preserve wallet and key data
+    /// data_files: [&str; 4]   -> data file paths for writing
     /// ```
     /// 
     /// # Returns
     /// Nothing
-    pub fn init(preserve_accounts: bool) {
-        let bc = to_string(&Blockchain {blockchain: []}).unwrap();
-        fs::write(BLOCKCHAIN_PATH, bc).expect("[-] Failed to write blockchain.json");
-        
-        let t = to_string(&Transactions {transactions: []}).unwrap();
-        fs::write(TRANSACTIONS_PATH, t).expect("[-] Failed to write transactions.json");
-        
-        if !preserve_accounts {
-            let w = to_string(&Wallets {wallets: []}).unwrap();
-            fs::write(WALLETS_PATH, w).expect("[-] Failed to write wallets.json");
-            
-            let kp = to_string(&KeyPairs {keypairs: []}).unwrap();
-            fs::write(KEYPAIRS_PATH, kp).expect("[-] Failed to write keypairs.json");
+    pub fn init(preserve_accounts: bool, data_files: [&str; 4]) {
+        for file in data_files {
+            if file.contains("blockchain") {
+                let bc = to_string(&Blockchain {blockchain: []}).unwrap();
+                fs::write(file, bc).expect(format!("[-] Failed to write '{}'", file).as_str());
+            }
+            if file.contains("transactions") {
+                let t = to_string(&Transactions {transactions: []}).unwrap();
+                fs::write(file, t).expect(format!("[-] Failed to write '{}'", file).as_str());
+            }
+            if !preserve_accounts {
+                if file.contains("keypairs") {
+                        let kp = to_string(&KeyPairs {keypairs: []}).unwrap();
+                        fs::write(file, kp).expect(format!("[-] Failed to write '{}'", file).as_str());
+                }
+                if file.contains("wallets") {
+                        let w = to_string(&Wallets {wallets: []}).unwrap();
+                        fs::write(file, w).expect(format!("[-] Failed to write '{}'", file).as_str());
+                }
+            }
         }
     }
 
@@ -76,7 +78,7 @@ impl FileOps {
     /// ```
     /// bool
     /// ```
-    pub fn _exists(path: &str) -> bool {
+    pub fn exists(path: &str) -> bool {
         Path::new(path).exists()
     }
     
@@ -134,5 +136,69 @@ impl FileOps {
             Err(e) => panic!("Error reading file content: {}", e)
         };
         serde_json::from_str(&json_str).expect("Poorly formatted JSON found")
+    }
+}
+
+// Testing
+#[cfg(test)]
+mod test_file {
+    use super::*;
+
+    use std::{thread, time};
+
+    use crate::mods::block::Block;
+    use crate::mods::constants::{
+        BLOCKCHAIN_PATH_TEST,
+        KEYPAIRS_PATH_TEST,
+        TRANSACTIONS_PATH_TEST,
+        WALLETS_PATH_TEST
+    };
+
+    #[test]
+    fn test_init() {
+        let data_files = [BLOCKCHAIN_PATH_TEST, KEYPAIRS_PATH_TEST, TRANSACTIONS_PATH_TEST, WALLETS_PATH_TEST];
+        FileOps::init(false, data_files);
+        assert_eq!(4, fs::read_dir("./src/data/test_data").unwrap().count());
+    }
+    
+    #[test]
+    fn test_exists() {
+        assert!(FileOps::exists(BLOCKCHAIN_PATH_TEST));
+        assert!(FileOps::exists(KEYPAIRS_PATH_TEST));
+        assert!(FileOps::exists(TRANSACTIONS_PATH_TEST));
+        assert!(FileOps::exists(WALLETS_PATH_TEST));
+    }
+
+    #[test]
+    fn test_write_and_parse() {
+
+        // sleep to allow file init and exists tests
+        let two_secs = time::Duration::from_millis(2000);
+        thread::sleep(two_secs);
+
+        // create a Block for testing
+        let test_block = Block {
+            timestamp: String::from("01/01/9999:00:00:00"),
+            hash: String::from("0".repeat(64)),
+            previous_hash: String::from("None"),
+            nonce: 0,
+            transactions: [],
+            merkle_root: String::from("None"),
+        };
+        // write Block to test file
+        FileOps::write(BLOCKCHAIN_PATH_TEST, "blockchain", &test_block);
+
+        // parse the Block from the test file
+        let mut json_obj = FileOps::parse(BLOCKCHAIN_PATH_TEST);
+
+        // assert "blockchain" Array was updated with 1 element
+        assert_eq!(1, json_obj["blockchain"].as_array_mut().unwrap().len());
+
+        // sleep again to allow operations to complete
+        thread::sleep(two_secs);
+
+        // clean up files using init
+        let data_files = [BLOCKCHAIN_PATH_TEST, KEYPAIRS_PATH_TEST, TRANSACTIONS_PATH_TEST, WALLETS_PATH_TEST];
+        FileOps::init(false, data_files);
     }
 }
