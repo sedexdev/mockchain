@@ -199,7 +199,8 @@ mod test_file {
         assert_eq!(1, json_obj["blockchain"].as_array_mut().unwrap().len());
 
         // sleep again to allow operations to complete
-        thread::sleep(two_secs);
+        let five_secs = time::Duration::from_millis(5000);
+        thread::sleep(five_secs);
 
         // re-initialize files after testing
         let data_files = [BLOCKCHAIN_PATH_TEST, KEYPAIRS_PATH_TEST, TRANSACTIONS_PATH_TEST, WALLETS_PATH_TEST];
