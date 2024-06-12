@@ -1,6 +1,13 @@
+use std::fmt::Debug;
+
 // 3rd party crates
-use hex::encode;
-use p256::SecretKey;
+use hex::{decode, encode};
+use p256::{
+    ecdsa::{
+        signature::{Signer, Verifier}, Signature, SigningKey,
+    },
+    SecretKey
+};
 use rand_core::OsRng;
 use serde::Serialize;
 
@@ -86,6 +93,54 @@ impl KeyPair {
             }
         }
         format!("No keypair found under {name}").to_string()
+    }
+
+    /// Signs a transaction on the blockchain using
+    /// the account holders private key
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// hash: String        -> transaction hash to sign
+    /// private_key: String -> private key to sign with 
+    /// ```
+    /// 
+    /// # Returns
+    /// ```
+    /// (String, String)
+    /// ```
+    pub fn sign(hash: &String, private_key: String) -> (String, String) {
+        let key_bytes = decode(&private_key).unwrap();
+        let signing_key = SigningKey::from_slice(key_bytes.as_slice()).unwrap();
+        let signature: Signature = signing_key.sign(&hash.as_bytes());
+        (encode(signature.to_bytes()), encode(signing_key.to_bytes()))
+    }
+    
+    /// Verifies a transaction on the blockchain using
+    /// the account holders public key
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// signature: String -> signature to verify
+    /// hash: String      -> transaction hash to verify
+    /// ```
+    /// 
+    /// # Returns
+    /// ```
+    /// bool
+    /// ```
+    pub fn verify(signature: Signature, signing_key: SigningKey, hash: String) -> bool {
+        let verifying_key = signing_key.verifying_key();
+        let verified = match verifying_key.verify(&hash.as_bytes(), &signature) {
+            Ok(_res) => true,
+            Err(_) => false,
+        };
+        verified
     }
 }
 
