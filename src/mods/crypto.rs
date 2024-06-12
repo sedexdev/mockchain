@@ -10,9 +10,14 @@ use p256::{
     SecretKey
 };
 use rand_core::OsRng;
+use rs_merkle::{
+    algorithms::Sha256, Hasher, MerkleTree
+};
 use serde::Serialize;
+use sha256::digest;
 
 // imports
+use crate::mods::constants::delimiter;
 use crate::mods::file::FileOps;
 
 /// Defines a KeyPair object for storing private and public keys
@@ -181,6 +186,102 @@ impl KeyPair {
         };
         (sig, sign)
     }
+
+    /// Creates a SHA256 hash of the components of 
+    /// a block. The delimiter aims to prevent an
+    /// attack where the string components of the
+    /// hash are combined in a different segments
+    /// e.g.
+    /// 
+    /// ```
+    /// digest("abc" + "def") == digest("ab" + "cdef")
+    /// ```
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// nonce: &u32           -> block nonce value  
+    /// prev_hash: &String    -> hash of the previous block
+    /// transactions: &String -> JSON serialized String of transactions
+    /// ```
+    /// 
+    /// # Returns
+    /// ```
+    /// String
+    /// ```
+    pub fn hash_block(nonce: &u32, prev_hash: &String, transactions: &String) -> String {
+        let mut values: String = String::from("");
+        values.push_str(nonce.to_string().as_str());
+        values.push_str(delimiter);
+        values.push_str(prev_hash.as_str());
+        values.push_str(delimiter);
+        values.push_str(transactions.as_str());
+        digest(values)
+    }
+
+    /// Creates a SHA256 hash of the components of 
+    /// a transaction. The delimiter aims to prevent an
+    /// attack where the string components of the
+    /// hash are combined in a different segments
+    /// e.g.
+    /// 
+    /// ```
+    /// digest("abc" + "def") == digest("ab" + "cdef")
+    /// ```
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// from_address: &String -> the senders private key
+    /// to_address: &String   -> the recipients public key
+    /// amount: &u32          -> amount being sent
+    /// ```
+    /// 
+    /// # Returns
+    /// ```
+    /// String
+    /// ```
+    pub fn hash_transaction(from_address: &String, to_address: &String, amount: &i32) -> String {
+        let mut values: String = String::from("");
+        values.push_str(from_address.as_str());
+        values.push_str(delimiter);
+        values.push_str(to_address.as_str());
+        values.push_str(delimiter);
+        values.push_str(amount.to_string().as_str());
+        digest(values)
+    }
+
+    // / Creates a Merkle Root by hashing all the transactions
+    // / that are going to be added to a block
+    // / 
+    // / # Visibility
+    // / public 
+    // / 
+    // / # Args
+    // / ```
+    // / transactions: Transactions -> a vector of Transaction instances
+    // / ```
+    // / 
+    // / # Returns
+    // / ```
+    // / String
+    // / ```
+    // pub fn get_merkle_root(transactions: &Vec<Transaction>) -> String {
+    //     if transactions.len() > 0 {
+    //         let mut hashes = Vec::new();
+    //         for t in transactions {
+    //             hashes.push(Sha256::hash(t.hash.as_bytes()));
+    //         }
+    //         let merkle_tree = MerkleTree::<Sha256>::from_leaves(&hashes);
+    //         merkle_tree.root_hex().unwrap()
+    //     } else {
+    //         String::from("None")
+    //     }
+    // }
 }
 
 
