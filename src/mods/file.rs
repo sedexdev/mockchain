@@ -163,6 +163,10 @@ mod test_file {
     
     #[test]
     fn test_exists() {
+        // sleep to allow file creation
+        let one_sec = time::Duration::from_millis(1000);
+        thread::sleep(one_sec);
+
         assert!(FileOps::exists(BLOCKCHAIN_PATH_TEST));
         assert!(FileOps::exists(KEYPAIRS_PATH_TEST));
         assert!(FileOps::exists(TRANSACTIONS_PATH_TEST));
@@ -197,7 +201,7 @@ mod test_file {
         // sleep again to allow operations to complete
         thread::sleep(two_secs);
 
-        // clean up files using init
+        // re-initialize files after testing
         let data_files = [BLOCKCHAIN_PATH_TEST, KEYPAIRS_PATH_TEST, TRANSACTIONS_PATH_TEST, WALLETS_PATH_TEST];
         FileOps::init(false, data_files);
     }
