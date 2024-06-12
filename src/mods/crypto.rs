@@ -168,16 +168,16 @@ impl KeyPair {
         let sig = match decode(signature) {
             Ok(bytes) => match Signature::from_slice(bytes.as_slice()) {
                 Ok(s) => s,
-                Err(_) => panic!("Cannot decode signature"),
+                Err(e) => panic!("Cannot decode signature: {}", e),
             },
-            Err(_) => panic!("Cannot decode signature"), 
+            Err(e) => panic!("Cannot decode signature: {}", e), 
         };
         let sign = match decode(signing_key) {
             Ok(bytes) => match SigningKey::from_slice(bytes.as_slice()) {
                 Ok(s) => s,
-                Err(_) => panic!("Cannot decode signing key"),
+                Err(e) => panic!("Cannot decode signing key: {}", e),
             },
-            Err(_) => panic!("Cannot decode signing key"), 
+            Err(e) => panic!("Cannot decode signing key: {}", e), 
         };
         (sig, sign)
     }
