@@ -2,7 +2,6 @@
 mod mods;
 
 // imports
-use mods::crypto::KeyPair;
 use crate::mods::constants::{
     BLOCKCHAIN_PATH,
     KEYPAIRS_PATH,

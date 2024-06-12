@@ -1,10 +1,11 @@
 use std::fmt::Debug;
+use std::str;
 
 // 3rd party crates
 use hex::{decode, encode};
 use p256::{
     ecdsa::{
-        signature::{Signer, Verifier}, Signature, SigningKey,
+        signature::{Signer, Verifier}, Signature, SigningKey, VerifyingKey,
     },
     SecretKey
 };
@@ -113,7 +114,10 @@ impl KeyPair {
     /// ```
     pub fn sign(hash: &String, private_key: String) -> (String, String) {
         let key_bytes = decode(&private_key).unwrap();
-        let signing_key = SigningKey::from_slice(key_bytes.as_slice()).unwrap();
+        let signing_key = match SigningKey::from_slice(key_bytes.as_slice()) {
+            Ok(key) => key,
+            Err(e) => panic!("Cannot decode signing key: {}", e),
+        };
         let signature: Signature = signing_key.sign(&hash.as_bytes());
         (encode(signature.to_bytes()), encode(signing_key.to_bytes()))
     }
@@ -135,12 +139,47 @@ impl KeyPair {
     /// bool
     /// ```
     pub fn verify(signature: Signature, signing_key: SigningKey, hash: String) -> bool {
-        let verifying_key = signing_key.verifying_key();
+        let verifying_key = VerifyingKey::from(&signing_key);
         let verified = match verifying_key.verify(&hash.as_bytes(), &signature) {
             Ok(_res) => true,
             Err(_) => false,
         };
         verified
+    }
+
+    /// Extract Signature and SigningKey objects from encoded
+    /// hex strings
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// signature: String   -> hex encoded Signture object
+    /// signing_key: String -> hex encoded SigningKey object
+    /// ```
+    /// 
+    /// # Returns
+    /// ```
+    /// (Signature, SigningKey)
+    /// ```
+    pub fn extract(signature: String, signing_key: String) -> (Signature, SigningKey){
+        // decode and extract Signature and SigningKey objects
+        let sig = match decode(signature) {
+            Ok(bytes) => match Signature::from_slice(bytes.as_slice()) {
+                Ok(s) => s,
+                Err(_) => panic!("Cannot decode signature"),
+            },
+            Err(_) => panic!("Cannot decode signature"), 
+        };
+        let sign = match decode(signing_key) {
+            Ok(bytes) => match SigningKey::from_slice(bytes.as_slice()) {
+                Ok(s) => s,
+                Err(_) => panic!("Cannot decode signing key"),
+            },
+            Err(_) => panic!("Cannot decode signing key"), 
+        };
+        (sig, sign)
     }
 }
 
@@ -180,5 +219,21 @@ mod test_crypto {
         let name = String::from("TEST3");
         KeyPair::generate(name, KEYPAIRS_PATH_TEST);
         assert!(KeyPair::get_key(String::from("TEST10"), String::from("private"), KEYPAIRS_PATH_TEST).contains("No keypair found"));
+    }
+
+    #[test]
+    fn test_sign_extract_verify() {
+        // test hash and private key
+        let test_hash = "0".repeat(64);
+        let test_private_key = String::from("4cae0e746defac95cba2dd5cdb440bb54d102713aeedcad19a483851c0a5ef21");
+        
+        // get a signature and signing key by signing the test hash
+        let (sig, key) = KeyPair::sign(&test_hash, test_private_key);
+
+        // extract the Signature and SigningKey
+        let (signature, signing_key) = KeyPair::extract(sig, key);
+
+        // assert verification of hash signature
+        assert!(KeyPair::verify(signature, signing_key, test_hash));
     }
 }

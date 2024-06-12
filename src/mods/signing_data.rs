@@ -1,5 +1,4 @@
 // 3rd party crates
-use p256::ecdsa::{Signature, SigningKey};
 use serde::Serialize;
 
 /// Define a Signing object
@@ -9,11 +8,10 @@ use serde::Serialize;
 /// 
 /// # Fields
 /// ```
-/// hash: String,
-/// from_address: String,
-/// to_address: String,
-/// amount: u32,
-/// signature: String
+/// name: String        -> name of signing account
+/// hash: String        -> transaction hash
+/// signing_key: String -> signing key (encoded as hex byte string)
+/// signature: String   -> signature (encoded as hex byte string)
 /// ```
 /// 
 /// # Derives
