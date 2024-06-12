@@ -81,3 +81,22 @@ pub struct Wallets {
 pub struct KeyPairs {
     pub keypairs: [Value; 0]
 }
+
+/// SigningData base structure
+/// 
+/// # Visibility
+/// public
+/// 
+/// # Fields
+/// ```
+/// signing_data: [Value; 0]
+/// ```
+/// 
+/// # Derives
+/// ```
+/// serde::Serialize, Debug
+/// ```
+#[derive(Serialize, Debug)]
+pub struct SigningData {
+    pub signing_data: [Value; 0]
+}
