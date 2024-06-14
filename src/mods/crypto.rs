@@ -337,4 +337,14 @@ mod test_crypto {
         // assert verification of hash signature
         assert!(KeyPair::verify(signature, signing_key, test_hash));
     }
+
+    #[test]
+    fn test_hash_block() {
+        
+    }
+
+    #[test]
+    fn test_hash_transactions() {
+
+    }
 }
