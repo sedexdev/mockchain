@@ -11,4 +11,4 @@ pub const WALLETS_PATH_TEST: &str = "./src/data/test_data/wallets_test.json";
 pub const KEYPAIRS_PATH_TEST: &str = "./src/data/test_data/keypairs_test.json";
 
 // hash delimiter
-pub const delimiter: &str = "-%-";
+pub const DELIMITER: &str = "-%-";

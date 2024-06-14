@@ -17,7 +17,7 @@ use serde::Serialize;
 use sha256::digest;
 
 // imports
-use crate::mods::constants::delimiter;
+use crate::mods::constants::DELIMITER;
 use crate::mods::file::FileOps;
 
 /// Defines a KeyPair object for storing private and public keys
@@ -215,9 +215,9 @@ impl KeyPair {
 pub fn hash_block(nonce: &String, prev_hash: &String, transactions: &String) -> String {
     let mut values: String = String::from("");
     values.push_str(nonce.as_str());
-    values.push_str(delimiter);
+    values.push_str(DELIMITER);
     values.push_str(prev_hash.as_str());
-    values.push_str(delimiter);
+    values.push_str(DELIMITER);
     values.push_str(transactions.as_str());
     digest(values)
 }
@@ -249,9 +249,9 @@ pub fn hash_block(nonce: &String, prev_hash: &String, transactions: &String) -> 
 pub fn hash_transaction(from_address: &String, to_address: &String, amount: &String) -> String {
     let mut values: String = String::from("");
     values.push_str(from_address.as_str());
-    values.push_str(delimiter);
+    values.push_str(DELIMITER);
     values.push_str(to_address.as_str());
-    values.push_str(delimiter);
+    values.push_str(DELIMITER);
     values.push_str(amount.as_str());
     digest(values)
 }
