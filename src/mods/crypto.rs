@@ -1,4 +1,4 @@
-use std::{fmt::Debug, fs::File};
+use std::fmt::Debug;
 use std::str;
 
 // 3rd party crates
