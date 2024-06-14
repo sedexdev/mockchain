@@ -7,7 +7,7 @@ use serde::Serialize;
 use serde_json::{to_string, to_value, Value};
 
 // imports
-use crate::mods::base::{Blockchain, KeyPairs, Transactions, Wallets};
+use super::base::{Blockchain, KeyPairs, Transactions, Wallets};
 
 /// File operations for working with JSON
 /// 

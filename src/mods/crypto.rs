@@ -17,8 +17,8 @@ use serde::Serialize;
 use sha256::digest;
 
 // imports
-use crate::mods::constants::DELIMITER;
-use crate::mods::file::FileOps;
+use super::constants::DELIMITER;
+use super::file::FileOps;
 
 /// Defines a KeyPair object for storing private and public keys
 /// 
