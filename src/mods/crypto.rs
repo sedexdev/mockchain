@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, fs::File};
 use std::str;
 
 // 3rd party crates
@@ -10,9 +10,14 @@ use p256::{
     SecretKey
 };
 use rand_core::OsRng;
+use rs_merkle::{
+    algorithms::Sha256, Hasher, MerkleTree
+};
 use serde::Serialize;
+use sha256::digest;
 
 // imports
+use crate::mods::constants::DELIMITER;
 use crate::mods::file::FileOps;
 
 /// Defines a KeyPair object for storing private and public keys
@@ -155,7 +160,7 @@ impl KeyPair {
     /// 
     /// # Args
     /// ```
-    /// signature: String   -> hex encoded Signture object
+    /// signature: String   -> hex encoded Signature object
     /// signing_key: String -> hex encoded SigningKey object
     /// ```
     /// 
@@ -182,6 +187,104 @@ impl KeyPair {
         (sig, sign)
     }
 }
+    
+/// Creates a SHA256 hash of the components of 
+/// a block. The delimiter aims to prevent an
+/// attack where the string components of the
+/// hash are combined in a different segments
+/// e.g.
+/// 
+/// ```
+/// digest("abc" + "def") == digest("ab" + "cdef")
+/// ```
+/// 
+/// # Visibility
+/// public
+/// 
+/// # Args
+/// ```
+/// nonce: &String        -> block nonce value  
+/// prev_hash: &String    -> hash of the previous block
+/// transactions: &String -> JSON serialized String of transactions
+/// ```
+/// 
+/// # Returns
+/// ```
+/// String
+/// ```
+pub fn hash_block(nonce: &String, prev_hash: &String, transactions: &String) -> String {
+    let mut values: String = String::from("");
+    values.push_str(nonce.as_str());
+    values.push_str(DELIMITER);
+    values.push_str(prev_hash.as_str());
+    values.push_str(DELIMITER);
+    values.push_str(transactions.as_str());
+    digest(values)
+}
+
+/// Creates a SHA256 hash of the components of 
+/// a transaction. The delimiter aims to prevent an
+/// attack where the string components of the
+/// hash are combined in a different segments
+/// e.g.
+/// 
+/// ```
+/// digest("abc" + "def") == digest("ab" + "cdef")
+/// ```
+/// 
+/// # Visibility
+/// public
+/// 
+/// # Args
+/// ```
+/// from_address: &String -> the senders private key
+/// to_address: &String   -> the recipients public key
+/// amount: &String       -> amount being sent
+/// ```
+/// 
+/// # Returns
+/// ```
+/// String
+/// ```
+pub fn hash_transaction(from_address: &String, to_address: &String, amount: &String) -> String {
+    let mut values: String = String::from("");
+    values.push_str(from_address.as_str());
+    values.push_str(DELIMITER);
+    values.push_str(to_address.as_str());
+    values.push_str(DELIMITER);
+    values.push_str(amount.as_str());
+    digest(values)
+}
+
+/// Creates a Merkle Root by hashing all the transactions
+/// that are going to be added to a block
+/// 
+/// # Visibility
+/// public 
+/// 
+/// # Args
+/// ```
+/// path: &str -> path to read transactions from
+/// ```
+/// 
+/// # Returns
+/// ```
+/// String
+/// ```
+pub fn get_merkle_root(path: &str) -> String {
+    let mut json_obj = FileOps::parse(path);
+    let transactions = json_obj["transactions"].as_array_mut().unwrap();
+    if transactions.len() > 0 {
+        let mut hashes = Vec::new();
+        for t in transactions {
+            hashes.push(Sha256::hash(t["hash"].to_string().as_bytes()));
+        }
+        let merkle_tree = MerkleTree::<Sha256>::from_leaves(&hashes);
+        merkle_tree.root_hex().unwrap()
+    } else {
+        String::from("None")
+    }
+}
 
 
 // Testing
@@ -191,7 +294,8 @@ mod test_crypto {
 
     use std::{thread, time};
 
-    use crate::mods::constants::KEYPAIRS_PATH_TEST;
+    use crate::mods::constants::{KEYPAIRS_PATH_TEST, TRANSACTIONS_PATH_TEST};
+    use crate::mods::transaction::Transaction;
 
     #[test]
     fn test_generate() {
@@ -235,5 +339,59 @@ mod test_crypto {
 
         // assert verification of hash signature
         assert!(KeyPair::verify(signature, signing_key, test_hash));
+    }
+
+    #[test]
+    fn test_hash_block() {
+        let transactions: [Transaction; 1] = [Transaction {
+            hash: String::from("2".repeat(64)),
+            from_address: String::from("2".repeat(130)),
+            to_address: String::from("3".repeat(130)),
+            amount: 10,
+            signature: String::from("4".repeat(128)),
+        }];
+
+        assert_eq!(
+            "c47b8a851113808578895f8f783961e38d9a0c481f1f921d90ac9c4905eca797",
+            hash_block(
+                &String::from("165"),
+                &String::from("1").repeat(64),
+                &serde_json::to_string(&transactions).unwrap()
+            )
+        );
+    }
+
+    #[test]
+    fn test_hash_transactions() {
+        let transactions: [Transaction; 1] = [Transaction {
+            hash: String::from("2".repeat(64)),
+            from_address: String::from("2".repeat(130)),
+            to_address: String::from("3".repeat(130)),
+            amount: 10,
+            signature: String::from("4".repeat(128)),
+        }];
+
+        assert_eq!(
+            "72426b1405464c9f600c859b8c4a9d9097e3a2f60850d8fbeb89c7985507bbc3",
+            hash_transaction(&transactions[0].from_address, &transactions[0].to_address, &transactions[0].amount.to_string())
+        );
+    }
+
+    #[test]
+    fn test_get_merkle_root() {
+        let transaction = Transaction {
+            hash: String::from("2".repeat(64)),
+            from_address: String::from("2".repeat(130)),
+            to_address: String::from("3".repeat(130)),
+            amount: 10,
+            signature: String::from("4".repeat(128)),
+        };
+    
+        FileOps::write(TRANSACTIONS_PATH_TEST, "transactions", transaction);
+    
+        assert_eq!(
+            "d16cf3eaa6384e9dd6936b29d435860f9b430b0f9ee970cbca44581ae73ce589",
+            get_merkle_root(TRANSACTIONS_PATH_TEST)
+        );
     }
 }

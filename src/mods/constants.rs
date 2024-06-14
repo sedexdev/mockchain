@@ -9,3 +9,6 @@ pub const BLOCKCHAIN_PATH_TEST: &str = "./src/data/test_data/blockchain_test.jso
 pub const TRANSACTIONS_PATH_TEST: &str = "./src/data/test_data/transactions_test.json";
 pub const WALLETS_PATH_TEST: &str = "./src/data/test_data/wallets_test.json";
 pub const KEYPAIRS_PATH_TEST: &str = "./src/data/test_data/keypairs_test.json";
+
+// hash delimiter
+pub const DELIMITER: &str = "-%-";
