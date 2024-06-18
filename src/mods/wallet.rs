@@ -1,9 +1,8 @@
-use std::fs::File;
-
 // 3rd party crates
 use serde::Serialize;
 
 // imports
+use super::constants::WALLETS_PATH;
 use super::file::FileOps;
 
 /// Defines a Wallet object with name, address, and balance
@@ -38,7 +37,6 @@ impl Wallet {
     /// 
     /// # Args
     /// ```
-    /// path: &str    -> file path to check
     /// name: &String -> name to check for
     /// ```
     /// 
@@ -46,8 +44,8 @@ impl Wallet {
     /// ```
     /// bool
     /// ```
-    pub fn name_exists(path: &str, name: &String) -> bool {
-        let mut json_obj = FileOps::parse(path);
+    pub fn name_exists(name: &String) -> bool {
+        let mut json_obj = FileOps::parse(WALLETS_PATH);
         let wallets = json_obj["wallets"].as_array_mut().unwrap(); 
         for wallet in wallets {
             if wallet["name"] == *name {
@@ -65,7 +63,6 @@ impl Wallet {
     /// 
     /// # Args
     /// ```
-    /// path: &str   -> file path to check
     /// name: String -> name to get address of
     /// ```
     /// 
@@ -73,11 +70,11 @@ impl Wallet {
     /// ```
     /// Option<String>
     /// ```
-    pub fn get_wallet_address(path: &str, name: String) -> Option<String> {
-        if !Wallet::name_exists(path, &name) {
+    pub fn get_wallet_address(name: String) -> Option<String> {
+        if !Wallet::name_exists(&name) {
             None
         } else {
-            let mut json_obj = FileOps::parse(path);
+            let mut json_obj = FileOps::parse(WALLETS_PATH);
             let wallets = json_obj["wallets"].as_array_mut().unwrap();
 
             let mut wallet_name = String::from("");
@@ -99,7 +96,6 @@ impl Wallet {
     /// 
     /// # Args
     /// ```
-    /// path: &str   -> path to write to
     /// name: String -> name of account to lookup
     /// amount: i64  -> amount to increment balance by
     /// op: &str     -> "add" | "subtract" 
@@ -107,18 +103,18 @@ impl Wallet {
     /// 
     /// # Returns
     /// Nothing
-    pub fn update_balance(path: &str, name: String, amount: i64, op: &str) {
-        if !Wallet::name_exists(path, &name) {
+    pub fn update_balance(name: String, amount: i64, op: &str) {
+        if !Wallet::name_exists(&name) {
             println!("No account found for '{}'", &name);
         } else {
-            let mut base_data = FileOps::parse(path);
+            let mut base_data = FileOps::parse(WALLETS_PATH);
             let wallets = base_data["wallets"].as_array_mut().unwrap();
             for wallet in wallets {
                 if wallet["name"] == name {
                     let mut balance = wallet["balance"].as_i64().unwrap();
                     if op == "add" { balance += amount; } 
                     if op == "subtract" { balance -= amount; }
-                    FileOps::write_balance(path, name, balance);
+                    FileOps::write_balance(name, balance);
                     break;
                 }
             }
@@ -132,7 +128,6 @@ impl Wallet {
     /// 
     /// # Args
     /// ```
-    /// path: &str   -> path to write to
     /// name: String -> name of account to lookup
     /// ```
     /// 
@@ -140,12 +135,12 @@ impl Wallet {
     /// ```
     /// Option<i64>
     /// ```
-    pub fn get_balance(path: &str, name: String) -> Option<i64> {
-        if !Wallet::name_exists(path, &name) {
+    pub fn get_balance(name: String) -> Option<i64> {
+        if !Wallet::name_exists(&name) {
             None
         } else {
             let mut balance: Option<i64> = None;
-            let mut base_data = FileOps::parse(path);
+            let mut base_data = FileOps::parse(WALLETS_PATH);
             let wallets = base_data["wallets"].as_array_mut().unwrap();
             for wallet in wallets {
                 if wallet["name"] == name {

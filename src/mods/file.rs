@@ -8,6 +8,12 @@ use serde_json::{to_string, to_value, Value};
 
 // imports
 use super::{base::{Blockchain, KeyPairs, Transactions, Wallets}, wallet::Wallet};
+use super::constants::{
+    BLOCKCHAIN_PATH,
+    KEYPAIRS_PATH,
+    TRANSACTIONS_PATH,
+    WALLETS_PATH
+};
 
 /// File operations for working with JSON
 /// 
@@ -36,50 +42,24 @@ impl FileOps {
     /// # Args
     /// ```
     /// preserve_accounts: bool -> option to preserve wallet and key data
-    /// data_files: [&str; 4]   -> data file paths for writing
     /// ```
     /// 
     /// # Returns
     /// Nothing
-    pub fn init(preserve_accounts: bool, data_files: [&str; 4]) {
-        for file in data_files {
-            if file.contains("blockchain") {
-                let bc = to_string(&Blockchain {blockchain: []}).unwrap();
-                fs::write(file, bc).expect(format!("[-] Failed to write '{}'", file).as_str());
-            }
-            if file.contains("transactions") {
-                let t = to_string(&Transactions {transactions: []}).unwrap();
-                fs::write(file, t).expect(format!("[-] Failed to write '{}'", file).as_str());
-            }
-            if !preserve_accounts {
-                if file.contains("keypairs") {
-                        let kp = to_string(&KeyPairs {keypairs: []}).unwrap();
-                        fs::write(file, kp).expect(format!("[-] Failed to write '{}'", file).as_str());
-                }
-                if file.contains("wallets") {
-                        let w = to_string(&Wallets {wallets: []}).unwrap();
-                        fs::write(file, w).expect(format!("[-] Failed to write '{}'", file).as_str());
-                }
-            }
-        }
-    }
+    pub fn init(preserve_accounts: bool) {
+        let bc = to_string(&Blockchain {blockchain: []}).unwrap();
+        fs::write(BLOCKCHAIN_PATH, bc).expect(format!("[-] Failed to write 'blockchain.json'").as_str());
 
-    /// Check if a file already exists
-    /// 
-    /// # Visibility
-    /// public
-    /// 
-    /// # Args
-    /// ```
-    /// path -> &str path slice
-    /// ```
-    /// 
-    /// # Returns
-    /// ```
-    /// bool
-    /// ```
-    pub fn exists(path: &str) -> bool {
-        Path::new(path).exists()
+        let t = to_string(&Transactions {transactions: []}).unwrap();
+        fs::write(TRANSACTIONS_PATH, t).expect(format!("[-] Failed to write 'transactions.json'").as_str());
+
+        if !preserve_accounts {
+            let kp = to_string(&KeyPairs {keypairs: []}).unwrap();
+            fs::write(KEYPAIRS_PATH, kp).expect(format!("[-] Failed to write 'keypairs.json'").as_str());
+
+            let w = to_string(&Wallets {wallets: []}).unwrap();
+            fs::write(WALLETS_PATH, w).expect(format!("[-] Failed to write 'wallets.json'").as_str());
+        }
     }
     
     /// Writes the current state of the blockchain to
@@ -122,23 +102,22 @@ impl FileOps {
     /// 
     /// # Args
     /// ```
-    /// path: &str   -> path to write to
     /// name: String -> name of account to lookup
     /// balance: i64 -> new balance to write
     /// ```
     /// 
     /// # Returns
     /// Nothing
-    pub fn write_balance(path: &str, name: String, balance: i64) {
-        if !Wallet::name_exists(path, &name) {
+    pub fn write_balance(name: String, balance: i64) {
+        if !Wallet::name_exists(&name) {
             println!("No account found for '{}'", name);
         } else {
-            let mut base_data = FileOps::parse(path);
+            let mut base_data = FileOps::parse(WALLETS_PATH);
             let wallets = base_data["wallets"].as_array_mut().unwrap();
             for wallet in wallets {
                 if wallet["name"] == name {
                     wallet["balance"] = to_value(balance).unwrap();
-                    fs::write(path, base_data.to_string()).expect("Failed to write file");
+                    fs::write(WALLETS_PATH, base_data.to_string()).expect("Failed to write file");
                     break;
                 }
             }
