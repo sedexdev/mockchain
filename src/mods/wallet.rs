@@ -46,7 +46,10 @@ impl Wallet {
     /// ```
     pub fn name_exists(name: &String) -> bool {
         let mut json_obj = FileOps::parse(WALLETS_PATH);
-        let wallets = json_obj["wallets"].as_array_mut().unwrap(); 
+        let wallets = match json_obj["wallets"].as_array_mut() {
+            Some(data) => data,
+            None => panic!("[-] Failed to read data array from '{}'", WALLETS_PATH),
+        }; 
         for wallet in wallets {
             if wallet["name"] == *name {
                 return true;
@@ -75,7 +78,10 @@ impl Wallet {
             None
         } else {
             let mut json_obj = FileOps::parse(WALLETS_PATH);
-            let wallets = json_obj["wallets"].as_array_mut().unwrap();
+            let wallets = match json_obj["wallets"].as_array_mut() {
+                Some(data) => data,
+                None => panic!("[-] Failed to read data array from '{}'", WALLETS_PATH),
+            };
 
             let mut wallet_name = String::from("");
 
@@ -108,10 +114,16 @@ impl Wallet {
             println!("No account found for '{}'", &name);
         } else {
             let mut base_data = FileOps::parse(WALLETS_PATH);
-            let wallets = base_data["wallets"].as_array_mut().unwrap();
+            let wallets = match base_data["wallets"].as_array_mut() {
+                Some(data) => data,
+                None => panic!("[-] Failed to read data array from '{}'", WALLETS_PATH),
+            };
             for wallet in wallets {
                 if wallet["name"] == name {
-                    let mut balance = wallet["balance"].as_i64().unwrap();
+                    let mut balance = match wallet["balance"].as_i64() {
+                        Some(val) => val,
+                        None => panic!("[-] Failed to parse balance as i64 integer"),
+                    };
                     if op == "add" { balance += amount; } 
                     if op == "subtract" { balance -= amount; }
                     FileOps::write_balance(name, balance);
@@ -141,10 +153,13 @@ impl Wallet {
         } else {
             let mut balance: Option<i64> = None;
             let mut base_data = FileOps::parse(WALLETS_PATH);
-            let wallets = base_data["wallets"].as_array_mut().unwrap();
+            let wallets = match base_data["wallets"].as_array_mut() {
+                Some(data) => data,
+                None => panic!("[-] Failed to read data array from '{}'", WALLETS_PATH),
+            };
             for wallet in wallets {
                 if wallet["name"] == name {
-                    balance = Some(wallet["balance"].as_i64().unwrap());
+                    balance = Some(wallet["balance"].as_i64());
                     break;
                 }
             }

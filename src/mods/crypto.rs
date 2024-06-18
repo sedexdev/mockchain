@@ -14,10 +14,11 @@ use rs_merkle::{
     algorithms::Sha256, Hasher, MerkleTree
 };
 use serde::Serialize;
+use serde_json::to_string;
 use sha256::digest;
 
 // imports
-use super::constants::DELIMITER;
+use super::constants::{DELIMITER, KEYPAIRS_PATH};
 use super::file::FileOps;
 
 /// Defines a KeyPair object for storing private and public keys
@@ -81,16 +82,18 @@ impl KeyPair {
     /// ```
     /// name: String -> name of account to get key from
     /// key: String  -> [public | private]
-    /// path:&str    -> file to read key from
     /// ```
     /// 
     /// # Returns
     /// ```
     /// String
     /// ```
-    pub fn get_key(name: String, key: String, path: &str) -> String {
-        let mut json_obj = FileOps::parse(path);
-        let key_arr = json_obj["keypairs"].as_array_mut().unwrap();
+    pub fn get_key(name: String, key: String) -> String {
+        let mut json_obj = FileOps::parse(KEYPAIRS_PATH);
+        let key_arr = match json_obj["keypairs"].as_array_mut() {
+            Some(arr) => arr,
+            None => panic!("[-] Unable to extract keypair data"),
+        };
         for k in key_arr {
             if k["name"] == name {
                 let mut id = key.to_owned();
@@ -118,7 +121,10 @@ impl KeyPair {
     /// (String, String)
     /// ```
     pub fn sign(hash: &String, private_key: String) -> (String, String) {
-        let key_bytes = decode(&private_key).unwrap();
+        let key_bytes = match decode(&private_key) {
+            Ok(bytes) => bytes,
+            Err(e) => panic!("[-] Unable to decode private key"),
+        };
         let signing_key = match SigningKey::from_slice(key_bytes.as_slice()) {
             Ok(key) => key,
             Err(e) => panic!("Cannot decode signing key: {}", e),
@@ -273,14 +279,21 @@ pub fn hash_transaction(from_address: &String, to_address: &String, amount: &Str
 /// ```
 pub fn get_merkle_root(path: &str) -> String {
     let mut json_obj = FileOps::parse(path);
-    let transactions = json_obj["transactions"].as_array_mut().unwrap();
+    let transactions = match json_obj["transactions"].as_array_mut() {
+        Some(arr) => arr,
+        None => panic!("[-] Unable to extract transaction data for merkle root"),
+    };
     if transactions.len() > 0 {
         let mut hashes = Vec::new();
         for t in transactions {
             hashes.push(Sha256::hash(t["hash"].to_string().as_bytes()));
         }
         let merkle_tree = MerkleTree::<Sha256>::from_leaves(&hashes);
-        merkle_tree.root_hex().unwrap()
+        let root = match merkle_tree.root_hex() {
+            Some(val) => val,
+            None => String::from("None"),
+        };
+        root
     } else {
         String::from("None")
     }
@@ -320,12 +333,17 @@ mod test_crypto {
             signature: String::from("4".repeat(128)),
         }];
 
+        let transaction_str = match to_string(&transactions) {
+            Ok(val) => val,
+            Err(e) => panic!("[-] Failed to convert transaction to JSON serializable string: {}", e),
+        };
+
         assert_eq!(
             "c47b8a851113808578895f8f783961e38d9a0c481f1f921d90ac9c4905eca797",
             hash_block(
                 &String::from("165"),
                 &String::from("1").repeat(64),
-                &serde_json::to_string(&transactions).unwrap()
+                &transaction_str,
             )
         );
     }
@@ -342,7 +360,11 @@ mod test_crypto {
 
         assert_eq!(
             "72426b1405464c9f600c859b8c4a9d9097e3a2f60850d8fbeb89c7985507bbc3",
-            hash_transaction(&transactions[0].from_address, &transactions[0].to_address, &transactions[0].amount.to_string())
+            hash_transaction(
+                &transactions[0].from_address, 
+                &transactions[0].to_address, 
+                &transactions[0].amount.to_string()
+            )
         );
     }
 }

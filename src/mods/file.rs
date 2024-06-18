@@ -4,7 +4,7 @@ use std::path::Path;
 
 // 3rd party crates
 use serde::Serialize;
-use serde_json::{to_string, to_value, Value};
+use serde_json::{from_str, to_string, to_value, Value};
 
 // imports
 use super::{base::{Blockchain, KeyPairs, Transactions, Wallets}, wallet::Wallet};
@@ -47,18 +47,30 @@ impl FileOps {
     /// # Returns
     /// Nothing
     pub fn init(preserve_accounts: bool) {
-        let bc = to_string(&Blockchain {blockchain: []}).unwrap();
-        fs::write(BLOCKCHAIN_PATH, bc).expect(format!("[-] Failed to write 'blockchain.json'").as_str());
+        let bc = match to_string(&Blockchain {blockchain: []}) {
+            Ok(val) => val,
+            Err(e) => panic!("[-] Failed to convert Blockchain to JSON serializable string: {}", e),
+        };
+        fs::write(BLOCKCHAIN_PATH, bc);
 
-        let t = to_string(&Transactions {transactions: []}).unwrap();
-        fs::write(TRANSACTIONS_PATH, t).expect(format!("[-] Failed to write 'transactions.json'").as_str());
+        let t = match to_string(&Transactions {transactions: []}) {
+            Ok(val) => val,
+            Err(e) => panic!("[-] Failed to convert Transaction to JSON serializable string: {}", e),
+        };
+        fs::write(TRANSACTIONS_PATH, t);
 
         if !preserve_accounts {
-            let kp = to_string(&KeyPairs {keypairs: []}).unwrap();
-            fs::write(KEYPAIRS_PATH, kp).expect(format!("[-] Failed to write 'keypairs.json'").as_str());
+            let kp = match to_string(&KeyPairs {keypairs: []}) {
+                Ok(val) => val,
+                Err(e) => panic!("[-] Failed to convert KeyPairs to JSON serializable string: {}", e),
+            };
+            fs::write(KEYPAIRS_PATH, kp);
 
-            let w = to_string(&Wallets {wallets: []}).unwrap();
-            fs::write(WALLETS_PATH, w).expect(format!("[-] Failed to write 'wallets.json'").as_str());
+            let w = match to_string(&Wallets {wallets: []}) {
+                Ok(val) => val,
+                Err(e) => panic!("[-] Failed to convert Wallets to JSON serializable string: {}", e),
+            };
+            fs::write(WALLETS_PATH, w);
         }
     }
     
@@ -89,9 +101,12 @@ impl FileOps {
         } else {
             // parse data from base file
             let mut base_data = FileOps::parse(path);
-            base_data[base].as_array_mut().unwrap().push(value);
+            match base_data[base].as_array_mut() {
+                Some(_) => base_data.push(value),
+                None => panic!("[-] Failed to parse data array from '{}'", &path),
+            };
             // write data back to file (full overwrite with new data appended) 
-            fs::write(path, base_data.to_string()).expect("Failed to write file");
+            fs::write(path, base_data.to_string());
         }
     }
 
@@ -110,14 +125,20 @@ impl FileOps {
     /// Nothing
     pub fn write_balance(name: String, balance: i64) {
         if !Wallet::name_exists(&name) {
-            println!("No account found for '{}'", name);
+            println!("[-] No account found for '{}'", name);
         } else {
             let mut base_data = FileOps::parse(WALLETS_PATH);
-            let wallets = base_data["wallets"].as_array_mut().unwrap();
+            let wallets = match base_data["wallets"].as_array_mut() {
+                Some(arr) => arr,
+                None => panic!("[-] Failed to parse data array from '{}'", WALLETS_PATH),
+            };
             for wallet in wallets {
                 if wallet["name"] == name {
-                    wallet["balance"] = to_value(balance).unwrap();
-                    fs::write(WALLETS_PATH, base_data.to_string()).expect("Failed to write file");
+                    wallet["balance"] = match to_value(balance) {
+                        Ok(balance) => balance,
+                        Err(e) => panic!("[-] Failed to convert wallet balance to JSON serializable value: {}", e),
+                    };
+                    fs::write(WALLETS_PATH, base_data.to_string());
                     break;
                 }
             }
@@ -143,6 +164,6 @@ impl FileOps {
             Ok(content) => content,
             Err(e) => panic!("Error reading file content: {}", e)
         };
-        serde_json::from_str(&json_str).expect("Poorly formatted JSON found")
+        from_str(&json_str)
     }
 }
