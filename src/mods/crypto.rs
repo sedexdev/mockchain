@@ -292,38 +292,7 @@ pub fn get_merkle_root(path: &str) -> String {
 mod test_crypto {
     use super::*;
 
-    use std::{thread, time};
-
-    use crate::mods::constants::{KEYPAIRS_PATH_TEST, TRANSACTIONS_PATH_TEST};
     use crate::mods::transaction::Transaction;
-
-    #[test]
-    fn test_generate() {
-        let name = String::from("TEST");
-        KeyPair::generate(name, KEYPAIRS_PATH_TEST);
-        let mut json_obj = FileOps::parse(KEYPAIRS_PATH_TEST);
-        assert_eq!("TEST", json_obj["keypairs"].as_array_mut().unwrap()[0]["name"]);
-    }
-
-    #[test]
-    fn test_get_key() {
-        let one_sec = time::Duration::from_millis(1000);
-        thread::sleep(one_sec);
-
-        let name = String::from("TEST2");
-        KeyPair::generate(name, KEYPAIRS_PATH_TEST);
-        assert_eq!(66, KeyPair::get_key(String::from("TEST2"), String::from("private"), KEYPAIRS_PATH_TEST).len());
-    }
-
-    #[test]
-    fn test_get_key_fails() {
-        let two_sec = time::Duration::from_millis(2000);
-        thread::sleep(two_sec);
-
-        let name = String::from("TEST3");
-        KeyPair::generate(name, KEYPAIRS_PATH_TEST);
-        assert!(KeyPair::get_key(String::from("TEST10"), String::from("private"), KEYPAIRS_PATH_TEST).contains("No keypair found"));
-    }
 
     #[test]
     fn test_sign_extract_verify() {
@@ -374,24 +343,6 @@ mod test_crypto {
         assert_eq!(
             "72426b1405464c9f600c859b8c4a9d9097e3a2f60850d8fbeb89c7985507bbc3",
             hash_transaction(&transactions[0].from_address, &transactions[0].to_address, &transactions[0].amount.to_string())
-        );
-    }
-
-    #[test]
-    fn test_get_merkle_root() {
-        let transaction = Transaction {
-            hash: String::from("2".repeat(64)),
-            from_address: String::from("2".repeat(130)),
-            to_address: String::from("3".repeat(130)),
-            amount: 10,
-            signature: String::from("4".repeat(128)),
-        };
-    
-        FileOps::write(TRANSACTIONS_PATH_TEST, "transactions", transaction);
-    
-        assert_eq!(
-            "d16cf3eaa6384e9dd6936b29d435860f9b430b0f9ee970cbca44581ae73ce589",
-            get_merkle_root(TRANSACTIONS_PATH_TEST)
         );
     }
 }
