@@ -7,7 +7,7 @@ use serde::Serialize;
 use serde_json::{to_string, to_value, Value};
 
 // imports
-use super::base::{Blockchain, KeyPairs, Transactions, Wallets};
+use super::{base::{Blockchain, KeyPairs, Transactions, Wallets}, wallet::Wallet};
 
 /// File operations for working with JSON
 /// 
@@ -113,6 +113,36 @@ impl FileOps {
             base_data[base].as_array_mut().unwrap().push(value);
             // write data back to file (full overwrite with new data appended) 
             fs::write(path, base_data.to_string()).expect("Failed to write file");
+        }
+    }
+
+    /// Write a new value to the balance field of an account
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// path: &str   -> path to write to
+    /// name: String -> name of account to lookup
+    /// balance: i64 -> new balance to write
+    /// ```
+    /// 
+    /// # Returns
+    /// Nothing
+    pub fn write_balance(path: &str, name: String, balance: i64) {
+        if !Wallet::name_exists(path, &name) {
+            println!("No account found for '{}'", name);
+        } else {
+            let mut base_data = FileOps::parse(path);
+            let wallets = base_data["wallets"].as_array_mut().unwrap();
+            for wallet in wallets {
+                if wallet["name"] == name {
+                    wallet["balance"] = to_value(balance).unwrap();
+                    fs::write(path, base_data.to_string()).expect("Failed to write file");
+                    break;
+                }
+            }
         }
     }
 

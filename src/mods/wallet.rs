@@ -1,3 +1,5 @@
+use std::fs::File;
+
 // 3rd party crates
 use serde::Serialize;
 
@@ -89,45 +91,38 @@ impl Wallet {
         }
     }
 
-    /// Adds value to the wallet balance after
-    /// a transaction
+    /// Updates the value of the wallet balance after
+    /// a transaction has been added to a block
     /// 
     /// # Visibility
     /// public
     /// 
     /// # Args
     /// ```
-    /// amount: u32 -> amount to increment the balance by
+    /// path: &str   -> path to write to
+    /// name: String -> name of account to lookup
+    /// amount: i64  -> amount to increment balance by
+    /// op: &str     -> "add" | "subtract" 
     /// ```
     /// 
     /// # Returns
     /// Nothing
-    pub fn increment_balance(&mut self, amount: i32) {
-        self.balance += amount;
-    }
-
-    /// Subtracts value from the wallet balance after
-    /// a transaction
-    /// 
-    /// # Visibility
-    /// public
-    /// 
-    /// # Args
-    /// ```
-    /// amount: u32 -> amount to decrement the balance by
-    /// ```
-    /// 
-    /// # Returns
-    /// ```
-    /// Result<bool, bool>
-    /// ```
-    pub fn decrement_balance(&mut self, amount: i32) -> Result<bool, bool> {
-        let cp_balance = self.balance.clone();
-        if cp_balance - &amount >= 0 {
-            self.balance -= amount;
-            return Ok(true);
+    pub fn update_balance(path: &str, name: String, amount: i64, op: &str) {
+        if !Wallet::name_exists(path, &name) {
+            println!("No account found for '{}'", &name);
+        } else {
+            let mut base_data = FileOps::parse(path);
+            let wallets = base_data["wallets"].as_array_mut().unwrap();
+            for wallet in wallets {
+                if wallet["name"] == name {
+                    let mut balance = wallet["balance"].as_i64().unwrap();
+                    if op == "add" { balance += amount; } 
+                    if op == "subtract" { balance -= amount; }
+                    FileOps::write_balance(path, name, balance);
+                    break;
+                }
+            }
         }
-        Err(false)
     }
 
     /// Gets the current balance of this Wallet
@@ -136,14 +131,30 @@ impl Wallet {
     /// public
     /// 
     /// # Args
-    /// None
+    /// ```
+    /// path: &str   -> path to write to
+    /// name: String -> name of account to lookup
+    /// ```
     /// 
     /// # Returns
     /// ```
-    /// i32
+    /// Option<i64>
     /// ```
-    pub fn get_balance(&self) -> i32 {
-        self.balance.clone()
+    pub fn get_balance(path: &str, name: String) -> Option<i64> {
+        if !Wallet::name_exists(path, &name) {
+            None
+        } else {
+            let mut balance: Option<i64> = None;
+            let mut base_data = FileOps::parse(path);
+            let wallets = base_data["wallets"].as_array_mut().unwrap();
+            for wallet in wallets {
+                if wallet["name"] == name {
+                    balance = Some(wallet["balance"].as_i64().unwrap());
+                    break;
+                }
+            }
+            balance
+        }
     }
 }
 
