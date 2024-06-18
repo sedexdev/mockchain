@@ -109,7 +109,6 @@ impl FileOps {
         } else {
             // parse data from base file
             let mut base_data = FileOps::parse(path);
-            // convert base array into mut Vec and push on the converted obj
             base_data[base].as_array_mut().unwrap().push(value);
             // write data back to file (full overwrite with new data appended) 
             fs::write(path, base_data.to_string()).expect("Failed to write file");

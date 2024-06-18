@@ -172,7 +172,7 @@ mod test_wallet {
     #[test]
     fn test_name_exists() {
         let wallet = Wallet {
-            name: String::from("Bingo"),
+            name: String::from("TEST"),
             address: String::from("0".repeat(130)),
             balance: 100
         };
@@ -190,7 +190,7 @@ mod test_wallet {
     #[test]
     fn test_get_wallet_address() {
         let wallet = Wallet {
-            name: String::from("Bingo2"),
+            name: String::from("TEST2"),
             address: String::from("0".repeat(130)),
             balance: 100
         };
@@ -198,10 +198,10 @@ mod test_wallet {
         FileOps::write(WALLETS_PATH_TEST, "wallets", &wallet);
 
         // sleep to allow file init and exists tests
-        let one_sec = time::Duration::from_millis(1000);
-        thread::sleep(one_sec);
+        let two_sec = time::Duration::from_millis(2000);
+        thread::sleep(two_sec);
 
-        let address = match Wallet::get_wallet_address(WALLETS_PATH_TEST, String::from("Bingo2")) {
+        let address = match Wallet::get_wallet_address(WALLETS_PATH_TEST, String::from("TEST2")) {
             Some(addr) => addr,
             None => String::from("Address not found"),
         }; 
@@ -210,17 +210,50 @@ mod test_wallet {
     }
 
     #[test]
-    fn test_increment_balance() {
+    fn test_balance_methods_add() {
+        let wallet = Wallet {
+            name: String::from("TEST3"),
+            address: String::from("0".repeat(130)),
+            balance: 0
+        };
 
+        FileOps::write(WALLETS_PATH_TEST, "wallets", &wallet);
+
+        // sleep to allow file init and exists tests
+        let one_sec = time::Duration::from_millis(1000);
+        thread::sleep(one_sec);
+
+        Wallet::update_balance(WALLETS_PATH_TEST, String::from("TEST3"), 100, "add");
+
+        let balance = match Wallet::get_balance(WALLETS_PATH_TEST, String::from("TEST3")) {
+            Some(val) => val,
+            None => -1
+        };
+
+        assert_eq!(100, balance);
     }
 
     #[test]
-    fn test_decrement_balance() {
+    fn test_balance_methods_subtract() {
+        let wallet = Wallet {
+            name: String::from("TEST4"),
+            address: String::from("0".repeat(130)),
+            balance: 500
+        };
 
-    }
+        FileOps::write(WALLETS_PATH_TEST, "wallets", &wallet);
 
-    #[test]
-    fn test_get_balance() {
+        // sleep to allow file init and exists tests
+        let one_sec = time::Duration::from_millis(1000);
+        thread::sleep(one_sec);
 
+        Wallet::update_balance(WALLETS_PATH_TEST, String::from("TEST4"), 100, "subtract");
+
+        let balance = match Wallet::get_balance(WALLETS_PATH_TEST, String::from("TEST4")) {
+            Some(val) => val,
+            None => -1
+        };
+
+        assert_eq!(100, balance);
     }
 }
