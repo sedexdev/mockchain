@@ -7,10 +7,11 @@ use serde::Serialize;
 use serde_json::{to_string, to_value, Value};
 
 // imports
-use super::{base::{Blockchain, KeyPairs, Transactions, Wallets}, wallet::Wallet};
+use super::{base::{Blockchain, KeyPairs, SigningData, Transactions, Wallets}, wallet::Wallet};
 use super::constants::{
     BLOCKCHAIN_PATH,
     KEYPAIRS_PATH,
+    SIGNING_DATA_PATH,
     TRANSACTIONS_PATH,
     WALLETS_PATH
 };
@@ -59,6 +60,9 @@ impl FileOps {
 
             let w = to_string(&Wallets {wallets: []}).unwrap();
             fs::write(WALLETS_PATH, w).expect(format!("[-] Failed to write 'wallets.json'").as_str());
+
+            let sd = to_string(&SigningData {signing_data: []}).unwrap();
+            fs::write(SIGNING_DATA_PATH, sd).expect(format!("[-] Failed to write 'signing.json'").as_str());
         }
     }
     

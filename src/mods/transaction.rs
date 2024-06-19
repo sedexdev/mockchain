@@ -11,7 +11,7 @@ use serde::Serialize;
 /// hash: String,
 /// from_address: String,
 /// to_address: String,
-/// amount: u32,
+/// amount: i32,
 /// signature: String
 /// ```
 /// 

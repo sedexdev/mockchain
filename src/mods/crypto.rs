@@ -17,7 +17,7 @@ use serde::Serialize;
 use sha256::digest;
 
 // imports
-use super::constants::DELIMITER;
+use super::constants::{DELIMITER, KEYPAIRS_PATH};
 use super::file::FileOps;
 
 /// Defines a KeyPair object for storing private and public keys
@@ -57,8 +57,10 @@ impl KeyPair {
     /// ```
     /// 
     /// # Returns
-    /// Nothing
-    pub fn generate(name: String, path: &str) {
+    /// ```
+    /// KeyPair
+    /// ```
+    pub fn generate(name: String) -> KeyPair {
         // private key first
         let secret = SecretKey::random(&mut OsRng);
         let private_key = encode(&secret.to_bytes());
@@ -69,7 +71,7 @@ impl KeyPair {
             public_key,
             private_key,
         };
-        FileOps::write(path, "keypairs", key_pair);
+        key_pair
     }
 
     /// Gets a key from keypairs.json file
@@ -80,22 +82,23 @@ impl KeyPair {
     /// # Args
     /// ```
     /// name: String -> name of account to get key from
-    /// key: String  -> [public | private]
-    /// path:&str    -> file to read key from
+    /// key: String  -> ["public" | "private"]
     /// ```
     /// 
     /// # Returns
     /// ```
     /// String
     /// ```
-    pub fn get_key(name: String, key: String, path: &str) -> String {
-        let mut json_obj = FileOps::parse(path);
+    pub fn get_key(name: String, key: String) -> String {
+        let mut json_obj = FileOps::parse(KEYPAIRS_PATH);
         let key_arr = json_obj["keypairs"].as_array_mut().unwrap();
         for k in key_arr {
             if k["name"] == name {
-                let mut id = key.to_owned();
+                let mut id = String::from("");
+                id.push_str(key.to_owned().as_str());
                 id.push_str("_key");
-                return k[id].to_string();
+                // replace " in returned Value with empty string
+                return k[id].to_string().replace("\"", "");
             }
         }
         format!("No keypair found under {name}").to_string()
