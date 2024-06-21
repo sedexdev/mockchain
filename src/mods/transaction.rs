@@ -1,5 +1,21 @@
+// std library
+use std::fs;
+
 // 3rd party crates
 use serde::Serialize;
+use serde_json::to_string;
+
+// imports
+use super::{
+    base::Transactions,
+    constants::{SIGNING_DATA_PATH, TRANSACTIONS_PATH},
+    crypto::{
+        hash_transaction,
+        KeyPair
+    },
+    file::FileOps,
+    signing_data::Signing
+};
 
 /// Define a Transaction object
 /// 
@@ -26,4 +42,63 @@ pub struct Transaction {
     pub to_address: String,
     pub amount: i32,
     pub signature: String
+}
+
+impl Transaction {
+
+    /// Generates a reward Transaction after a Block has
+    /// been mined. Once the current transactions have been
+    /// cleared this transaction is added as the first in
+    /// a new list of transactions
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// ```
+    /// name: String -> name of miner of last Block
+    /// ```
+    /// 
+    /// # Returns
+    /// Nothing
+    pub fn add_reward(name: String) {
+        let to_address = KeyPair::get_key(name.clone(), String::from("public"));
+        let hash = hash_transaction(&String::from("REWARD"), &to_address, &String::from("50"));
+
+        let private_key = KeyPair::get_key(name.clone(), String::from("private"));
+        let (signature, signing_key) = KeyPair::sign(&hash, private_key);
+
+        let signing_data = Signing {
+            name: name.clone(),
+            hash: hash.clone(),
+            signing_key,
+            signature: signature.clone(),
+        };
+
+        let reward = Transaction {
+            hash,
+            from_address: String::from("REWARD"),
+            to_address,
+            amount: 50,
+            signature,
+        };
+
+        FileOps::write(TRANSACTIONS_PATH, "transactions", reward);
+        FileOps::write(SIGNING_DATA_PATH, "signing_data", signing_data);
+    }
+
+    /// Clears all current transactions after mining
+    /// 
+    /// # Visibility
+    /// public
+    /// 
+    /// # Args
+    /// None
+    /// 
+    /// # Returns
+    /// Nothing
+    pub fn clear() {
+        let t = to_string(&Transactions {transactions: []}).unwrap();
+        fs::write(TRANSACTIONS_PATH, t).expect(format!("[-] Failed to write 'transactions.json'").as_str());
+    }
 }
