@@ -6,7 +6,6 @@ use std::{thread, time};
 
 // 3rd party crates
 use chrono::Utc;
-use p256::ecdsa::{Signature, SigningKey};
 
 // imports
 use mods::{
