@@ -10,8 +10,7 @@ use p256::ecdsa::{Signature, SigningKey};
 
 // imports
 use mods::{
-    base, 
-    block::{self, Block}, 
+    block::Block, 
     constants::{
         BLOCKCHAIN_PATH,
         KEYPAIRS_PATH,
