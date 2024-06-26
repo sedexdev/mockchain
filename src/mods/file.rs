@@ -1,4 +1,5 @@
 // std library
+use std::env;
 use std::fs;
 use std::path::Path;
 
@@ -48,6 +49,9 @@ impl FileOps {
     /// # Returns
     /// Nothing
     pub fn init(preserve_accounts: bool) {
+        if !Path::new("./src/data/").exists() {
+            fs::create_dir("./src/data/").expect("Failed to create directory 'data'");
+        }
         let bc = to_string(&Blockchain {blockchain: []}).unwrap();
         fs::write(BLOCKCHAIN_PATH, bc).expect(format!("[-] Failed to write 'blockchain.json'").as_str());
 
