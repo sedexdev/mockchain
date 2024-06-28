@@ -44,8 +44,11 @@ impl Wallet {
     /// bool
     /// ```
     pub fn name_exists(name: &String) -> bool {
-        let mut json_obj = FileOps::parse(WALLETS_PATH);
-        let wallets = json_obj["wallets"].as_array_mut().unwrap();
+        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let wallets = match base_data["wallets"].as_array_mut() {
+            Some(data) => data,
+            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+        };
         for wallet in wallets {
             if wallet["name"] == *name {
                 return true;
@@ -73,8 +76,11 @@ impl Wallet {
         if !Wallet::name_exists(name) {
             None
         } else {
-            let mut json_obj = FileOps::parse(WALLETS_PATH);
-            let wallets = json_obj["wallets"].as_array_mut().unwrap();
+            let mut base_data = FileOps::parse(WALLETS_PATH);
+            let wallets = match base_data["wallets"].as_array_mut() {
+                Some(data) => data,
+                None => panic!("Wallet data not found, has the file been moved or deleted?"),
+            };
 
             let mut wallet_name = String::from("");
 
@@ -104,18 +110,24 @@ impl Wallet {
     /// Nothing
     pub fn update_balance(address: String, amount: i32, op: &str) {
         let mut base_data = FileOps::parse(WALLETS_PATH);
-        let wallets = base_data["wallets"].as_array_mut().unwrap();
+        let wallets = match base_data["wallets"].as_array_mut() {
+            Some(data) => data,
+            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+        };
+
         for wallet in wallets {
             if wallet["address"].to_string() == address {
-                let mut balance = wallet["balance"].as_i64().unwrap() as i32;
-                if op == "add" {
-                    balance += amount;
+                if let Some(val) = wallet["balance"].as_i64() {
+                    let mut balance = val as i32;
+                    if op == "add" {
+                        balance += amount;
+                    }
+                    if op == "subtract" {
+                        balance -= amount;
+                    }
+                    FileOps::write_balance(address, balance);
+                    break;
                 }
-                if op == "subtract" {
-                    balance -= amount;
-                }
-                FileOps::write_balance(address, balance);
-                break;
             }
         }
     }
@@ -137,11 +149,17 @@ impl Wallet {
     pub fn get_balance(name: &String) -> i32 {
         let mut balance: i32 = 0;
         let mut base_data = FileOps::parse(WALLETS_PATH);
-        let wallets = base_data["wallets"].as_array_mut().unwrap();
+        let wallets = match base_data["wallets"].as_array_mut() {
+            Some(data) => data,
+            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+        };
+
         for wallet in wallets {
             if wallet["name"] == *name {
-                balance = wallet["balance"].as_i64().unwrap() as i32;
-                break;
+                if let Some(val) = wallet["balance"].as_i64() {
+                    balance = val as i32;
+                    break;
+                }
             }
         }
         balance

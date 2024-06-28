@@ -52,15 +52,22 @@ impl Block {
     pub fn add_genesis_block() {
         let now = Utc::now();
         let timestamp = now.to_rfc3339();
-        let transactions = to_string(&Value::Array([].to_vec())).unwrap();
-        let hash = hash_block(&String::from("0"), &String::from("N/A"), &transactions);
+        let transactions = match to_string(&Value::Array([].to_vec())) {
+            Ok(val) => val,
+            Err(e) => panic!("Unable to parse genesis block transaction to json_serde Value::String: {}", e),
+        };
+        let transactions = match to_value(transactions) {
+            Ok(val) => val,
+            Err(e) => panic!("Unable to parse genesis block transaction to json_serde Value: {}", e),
+        };
+        let hash = hash_block(&String::from("0"), &String::from("N/A"), &transactions.to_string());
         let merkle_root = get_merkle_root(TRANSACTIONS_PATH);
         let genesis_block = Block {
             timestamp,
             hash,
             previous_hash: String::from("N/A"),
             nonce: 0,
-            transactions: to_value(transactions).unwrap(),
+            transactions,
             merkle_root,
         };
         FileOps::write(BLOCKCHAIN_PATH, "blockchain", genesis_block);
