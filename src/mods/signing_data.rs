@@ -2,10 +2,10 @@
 use serde::Serialize;
 
 /// Define a Signing object
-/// 
+///
 /// # Visibility
 /// public
-/// 
+///
 /// # Fields
 /// ```
 /// name: String        -> name of signing account
@@ -13,7 +13,7 @@ use serde::Serialize;
 /// signing_key: String -> signing key (encoded as hex byte string)
 /// signature: String   -> signature (encoded as hex byte string)
 /// ```
-/// 
+///
 /// # Derives
 /// ```
 /// serde::Serialize, Debug
@@ -23,5 +23,5 @@ pub struct Signing {
     pub name: String,
     pub hash: String,
     pub signing_key: String,
-    pub signature: String
+    pub signature: String,
 }

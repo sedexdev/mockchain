@@ -5,14 +5,13 @@ use std::str;
 use hex::{decode, encode};
 use p256::{
     ecdsa::{
-        signature::{Signer, Verifier}, Signature, SigningKey, VerifyingKey,
+        signature::{Signer, Verifier},
+        Signature, SigningKey, VerifyingKey,
     },
-    SecretKey
+    SecretKey,
 };
 use rand_core::OsRng;
-use rs_merkle::{
-    algorithms::Sha256, Hasher, MerkleTree
-};
+use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 use serde::Serialize;
 use sha256::digest;
 
@@ -21,17 +20,17 @@ use super::constants::{DELIMITER, KEYPAIRS_PATH};
 use super::file::FileOps;
 
 /// Defines a KeyPair object for storing private and public keys
-/// 
+///
 /// # Visibility
 /// public
-/// 
+///
 /// # Fields
 /// ```
 /// name: String
 /// public_key: String
 /// private_key: String
 /// ```
-/// 
+///
 /// # Derives
 /// ```
 /// serde::Serialize, Debug
@@ -44,18 +43,17 @@ pub struct KeyPair {
 }
 
 impl KeyPair {
-
     /// Creates a new key pair including a public
     /// and private key
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// ```
     /// name: String -> name of the account for this key pair
     /// ```
-    /// 
+    ///
     /// # Returns
     /// ```
     /// KeyPair
@@ -75,16 +73,16 @@ impl KeyPair {
     }
 
     /// Gets a key from keypairs.json file
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// ```
     /// name: String -> name of account to get key from
     /// key: String  -> ["public" | "private"]
     /// ```
-    /// 
+    ///
     /// # Returns
     /// ```
     /// String
@@ -106,16 +104,16 @@ impl KeyPair {
 
     /// Signs a transaction on the blockchain using
     /// the account holders private key
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// ```
     /// hash: String        -> transaction hash to sign
-    /// private_key: String -> private key to sign with 
+    /// private_key: String -> private key to sign with
     /// ```
-    /// 
+    ///
     /// # Returns
     /// ```
     /// (String, String)
@@ -129,19 +127,19 @@ impl KeyPair {
         let signature: Signature = signing_key.sign(&hash.as_bytes());
         (encode(signature.to_bytes()), encode(signing_key.to_bytes()))
     }
-    
+
     /// Verifies a transaction on the blockchain using
     /// the account holders public key
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// ```
     /// signature: String -> signature to verify
     /// hash: String      -> transaction hash to verify
     /// ```
-    /// 
+    ///
     /// # Returns
     /// ```
     /// bool
@@ -157,60 +155,60 @@ impl KeyPair {
 
     /// Extract Signature and SigningKey objects from encoded
     /// hex strings
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// ```
     /// signature: String   -> hex encoded Signature object
     /// signing_key: String -> hex encoded SigningKey object
     /// ```
-    /// 
+    ///
     /// # Returns
     /// ```
     /// (Signature, SigningKey)
     /// ```
-    pub fn extract(signature: String, signing_key: String) -> (Signature, SigningKey){
+    pub fn extract(signature: String, signing_key: String) -> (Signature, SigningKey) {
         // decode and extract Signature and SigningKey objects
         let sig = match decode(signature) {
             Ok(bytes) => match Signature::from_slice(bytes.as_slice()) {
                 Ok(s) => s,
                 Err(e) => panic!("Cannot decode signature: {}", e),
             },
-            Err(e) => panic!("Cannot decode signature: {}", e), 
+            Err(e) => panic!("Cannot decode signature: {}", e),
         };
         let sign = match decode(signing_key) {
             Ok(bytes) => match SigningKey::from_slice(bytes.as_slice()) {
                 Ok(s) => s,
                 Err(e) => panic!("Cannot decode signing key: {}", e),
             },
-            Err(e) => panic!("Cannot decode signing key: {}", e), 
+            Err(e) => panic!("Cannot decode signing key: {}", e),
         };
         (sig, sign)
     }
 }
-    
-/// Creates a SHA256 hash of the components of 
+
+/// Creates a SHA256 hash of the components of
 /// a block. The delimiter aims to prevent an
 /// attack where the string components of the
 /// hash are combined in a different segments
 /// e.g.
-/// 
+///
 /// ```
 /// digest("abc" + "def") == digest("ab" + "cdef")
 /// ```
-/// 
+///
 /// # Visibility
 /// public
-/// 
+///
 /// # Args
 /// ```
 /// nonce: &String        -> block nonce value  
 /// prev_hash: &String    -> hash of the previous block
 /// transactions: &String -> JSON serialized String of transactions
 /// ```
-/// 
+///
 /// # Returns
 /// ```
 /// String
@@ -225,26 +223,26 @@ pub fn hash_block(nonce: &String, prev_hash: &String, transactions: &String) -> 
     digest(values)
 }
 
-/// Creates a SHA256 hash of the components of 
+/// Creates a SHA256 hash of the components of
 /// a transaction. The delimiter aims to prevent an
 /// attack where the string components of the
 /// hash are combined in a different segments
 /// e.g.
-/// 
+///
 /// ```
 /// digest("abc" + "def") == digest("ab" + "cdef")
 /// ```
-/// 
+///
 /// # Visibility
 /// public
-/// 
+///
 /// # Args
 /// ```
 /// from_address: &String -> the senders private key
 /// to_address: &String   -> the recipients public key
 /// amount: &String       -> amount being sent
 /// ```
-/// 
+///
 /// # Returns
 /// ```
 /// String
@@ -261,15 +259,15 @@ pub fn hash_transaction(from_address: &String, to_address: &String, amount: &Str
 
 /// Creates a Merkle Root by hashing all the transactions
 /// that are going to be added to a block
-/// 
+///
 /// # Visibility
-/// public 
-/// 
+/// public
+///
 /// # Args
 /// ```
 /// path: &str -> path to read transactions from
 /// ```
-/// 
+///
 /// # Returns
 /// ```
 /// String
@@ -289,7 +287,6 @@ pub fn get_merkle_root(path: &str) -> String {
     }
 }
 
-
 // Testing
 #[cfg(test)]
 mod test_crypto {
@@ -301,8 +298,9 @@ mod test_crypto {
     fn test_sign_extract_verify() {
         // test hash and private key
         let test_hash = "0".repeat(64);
-        let test_private_key = String::from("4cae0e746defac95cba2dd5cdb440bb54d102713aeedcad19a483851c0a5ef21");
-        
+        let test_private_key =
+            String::from("4cae0e746defac95cba2dd5cdb440bb54d102713aeedcad19a483851c0a5ef21");
+
         // get a signature and signing key by signing the test hash
         let (sig, key) = KeyPair::sign(&test_hash, test_private_key);
 
@@ -345,7 +343,11 @@ mod test_crypto {
 
         assert_eq!(
             "72426b1405464c9f600c859b8c4a9d9097e3a2f60850d8fbeb89c7985507bbc3",
-            hash_transaction(&transactions[0].from_address, &transactions[0].to_address, &transactions[0].amount.to_string())
+            hash_transaction(
+                &transactions[0].from_address,
+                &transactions[0].to_address,
+                &transactions[0].amount.to_string()
+            )
         );
     }
 }

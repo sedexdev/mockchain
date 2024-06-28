@@ -4,18 +4,16 @@ mod mods;
 // std library
 use std::{thread, time};
 
-use mods::constants::{BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH};
+use mods::constants::{
+    BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH,
+};
 use mods::wallet::Wallet;
 // imports
 use mods::{
     block::Block,
     file::FileOps,
-    helpers::{
-        create_transaction,
-        create_wallet,
-        mine_block,
-        verify_chain,
-    },
+    helpers::{create_transaction, create_wallet, mine_block, verify_chain},
+    messaging::{display_msg, Message},
     repl::Repl,
 };
 
@@ -27,12 +25,11 @@ fn main() {
     thread::sleep(half_sec);
 
     Block::add_genesis_block();
-    
+
     Repl::print_intro();
     Repl::print_options();
 
     loop {
-
         print!("Select an option: ");
         let _ = match Repl::get_input() {
             Some(choice) => match choice {
@@ -50,10 +47,16 @@ fn main() {
                 11 => {
                     println!("See you again soon! 👋 Your data files will be preserved 😃");
                     break;
-                },
-                _ => println!("[-] Please enter a valid integer to select an option")
+                }
+                _ => display_msg(Message::Failure(
+                    "Please enter a valid integer to select an option".to_string(),
+                    None,
+                )),
             },
-            None => println!("[-] Please enter a valid integer to select an option"),
+            None => display_msg(Message::Failure(
+                "Please enter a valid integer to select an option".to_string(),
+                None,
+            )),
         };
     }
 }
@@ -65,14 +68,20 @@ fn option1() {
     let _ = match Repl::get_input() {
         Some(name) => {
             if Wallet::name_exists(&name) {
-                println!("[-] Wallet with name '{}' already exists", &name);
+                display_msg(Message::Failure(
+                    "Wallet with name '{}' already exists".to_string(),
+                    Some(vec![name.clone()]),
+                ));
                 return;
             }
-            println!("[+] Creating wallet for '{}'", &name);
+            display_msg(Message::Success(
+                "Creating wallet for '{}'".to_string(),
+                Some(vec![name.clone()]),
+            ));
             create_wallet(name);
-            println!("[+] Wallet created");
-        },
-        None => println!("[-] Invalid name"),
+            display_msg(Message::Success("Wallet created".to_string(), None));
+        }
+        None => display_msg(Message::Failure("Invalid name".to_string(), None)),
     };
 }
 
@@ -81,13 +90,20 @@ fn option2() {
     let _ = match Repl::get_input() {
         Some(name) => {
             if !Wallet::name_exists(&name) {
-                println!("[-] No wallet found under name '{}'", &name);
+                display_msg(Message::Failure(
+                    "No wallet found under name '{}'".to_string(),
+                    Some(vec![name.clone()]),
+                ));
             } else {
                 mine_block(name.clone());
-                println!("[+] New block mined successfully. A reward transaction has been added for '{}'", &name);
+                display_msg(Message::Success(
+                    "New block mined successfully. A reward transaction has been added for '{}'"
+                        .to_string(),
+                    Some(vec![name.clone()]),
+                ));
             }
-        },
-        None => println!("[-] Invalid name"),
+        }
+        None => display_msg(Message::Failure("Invalid name".to_string(), None)),
     };
 }
 
@@ -99,75 +115,124 @@ fn option3() {
     let _ = match Repl::get_input() {
         Some(name) => {
             if !Wallet::name_exists(&name) {
-                println!("[-] No wallet found under name '{}'", &name);
+                display_msg(Message::Failure(
+                    "No wallet found under name '{}'".to_string(),
+                    Some(vec![name.clone()]),
+                ));
                 return;
             }
             senders_name = name;
-        },
-        None => println!("[-] Invalid name"),
+        }
+        None => display_msg(Message::Failure("Invalid name".to_string(), None)),
     };
     print!("Name on recipients wallet: ");
     let _ = match Repl::get_input() {
         Some(name) => {
             if !Wallet::name_exists(&name) {
-                println!("[-] No wallet found under name '{}'", &name);
+                display_msg(Message::Failure(
+                    "No wallet found under name '{}'".to_string(),
+                    Some(vec![name.clone()]),
+                ));
                 return;
             }
             recipients_name = name;
-        },
-        None => println!("[-] Invalid name"),
+        }
+        None => display_msg(Message::Failure("Invalid name".to_string(), None)),
     };
     print!("Amount: ");
     let _ = match Repl::get_input() {
         Some(val) => {
             amount = val;
-            if Wallet::get_balance(&senders_name) < amount {
-                println!("[-] Not enough funds to send {} from {}'s account", &amount, &senders_name);
+            if val <= 0 {
+                display_msg(Message::Failure("Choose an amount greater than 0".to_string(), None));
                 return;
             }
-            println!("[+] Adding new pending transaction\n");
-            println!("\tSenders public key: {}", Wallet::get_wallet_address(&senders_name).unwrap());
-            println!("\tRecipients public key: {}", Wallet::get_wallet_address(&recipients_name).unwrap());
-            println!("\tAmount: {}", &amount);
+            if Wallet::get_balance(&senders_name) < amount {
+                display_msg(Message::Failure(
+                    "Not enough funds to send {} from {}'s account".to_string(),
+                    Some(vec![amount.to_string(), senders_name.clone()]),
+                ));
+                return;
+            }
+            display_msg(Message::Success(
+                "Adding new pending transaction\n".to_string(),
+                None,
+            ));
+            println!(
+                "\tSenders public key: {}",
+                Wallet::get_wallet_address(&senders_name).unwrap()
+            );
+            println!(
+                "\tRecipients public key: {}",
+                Wallet::get_wallet_address(&recipients_name).unwrap()
+            );
+            println!("\tAmount: {}\n", &amount);
             create_transaction(senders_name, recipients_name, amount);
-            println!("\n[+] Transaction added successfully");
-        },
-        None => println!("[-] Please enter a positive whole number"),
+            display_msg(Message::Success(
+                "Transaction added successfully".to_string(),
+                None,
+            ));
+        }
+        None => display_msg(Message::Failure(
+            "Please enter a positive whole number".to_string(),
+            None,
+        )),
     };
 }
 
 fn option9() {
-    print!("!! This action will wipe out the current blockchain and transaction data. Continue? (y/n) ");
+    display_msg(Message::Warning("!! This action will wipe out the current blockchain and transaction data. Continue? (y/n) ".to_string(), None));
     let wipe: String = match Repl::get_input() {
         Some(val) => val,
-        None => "[-] Invalid option".to_string(),
+        None => "Invalid option".to_string(),
     };
     match wipe.as_str() {
         "y" => {
-            print!("Would you like to preserve existing wallets? (y/n) ");
+            display_msg(Message::Warning(
+                "Would you like to preserve existing wallets? (y/n) ".to_string(),
+                None,
+            ));
             let keep: String = match Repl::get_input() {
                 Some(val) => val,
-                None => "[-] Invalid option".to_string(),
+                None => "Invalid option".to_string(),
             };
             match keep.as_str() {
                 "y" => {
-                    println!("[+] Re-initializing blockchain...");
+                    display_msg(Message::Success(
+                        "Re-initializing blockchain...".to_string(),
+                        None,
+                    ));
                     FileOps::init(true);
-                    println!("[+] Blockchain init completed successfully");
-                    println!("[+] Wallet data has been preserved");
-                },
+                    display_msg(Message::Success(
+                        "Blockchain init completed successfully".to_string(),
+                        None,
+                    ));
+                    display_msg(Message::Success(
+                        "Wallet data has been preserved".to_string(),
+                        None,
+                    ));
+                }
                 "n" => {
-                    println!("[+] Re-initializing blockchain...");
+                    display_msg(Message::Success(
+                        "Re-initializing blockchain...".to_string(),
+                        None,
+                    ));
                     FileOps::init(false);
-                    println!("[+] Blockchain init completed successfully");
-                    println!("[+] Wallet data has been deleted");
-                },
-                "[-] Invalid option" => println!("{}", wipe),
-                _ => println!("{}", wipe),
+                    display_msg(Message::Success(
+                        "Blockchain init completed successfully".to_string(),
+                        None,
+                    ));
+                    display_msg(Message::Success(
+                        "Wallet data has been deleted".to_string(),
+                        None,
+                    ));
+                }
+                "Invalid option" => display_msg(Message::Failure(wipe, None)),
+                _ => display_msg(Message::Failure(wipe, None)),
             }
-        },
-        "n" => println!("[+] Operation cancelled"),
-        "[-] Invalid option" => println!("{}", wipe),
-        _ => println!("{}", wipe),
+        }
+        "n" => display_msg(Message::Success("Operation cancelled".to_string(), None)),
+        "Invalid option" => display_msg(Message::Failure(wipe, None)),
+        _ => display_msg(Message::Failure(wipe, None)),
     };
 }
