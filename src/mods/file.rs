@@ -1,4 +1,5 @@
 // std library
+use std::io::prelude::*;
 use std::fs;
 use std::path::Path;
 
@@ -48,11 +49,17 @@ impl FileOps {
     /// # Returns
     /// Nothing
     pub fn init(preserve_accounts: bool) {
+        if !Path::new("./src/data/").exists() {
+            fs::create_dir("./src/data/").expect("Failed to create directory 'data'");
+        }
         let bc = to_string(&Blockchain {blockchain: []}).unwrap();
         fs::write(BLOCKCHAIN_PATH, bc).expect(format!("[-] Failed to write 'blockchain.json'").as_str());
 
         let t = to_string(&Transactions {transactions: []}).unwrap();
         fs::write(TRANSACTIONS_PATH, t).expect(format!("[-] Failed to write 'transactions.json'").as_str());
+
+        let sd = to_string(&SigningData {signing_data: []}).unwrap();
+        fs::write(SIGNING_DATA_PATH, sd).expect(format!("[-] Failed to write 'signing.json'").as_str());
 
         if !preserve_accounts {
             let kp = to_string(&KeyPairs {keypairs: []}).unwrap();
@@ -60,9 +67,6 @@ impl FileOps {
 
             let w = to_string(&Wallets {wallets: []}).unwrap();
             fs::write(WALLETS_PATH, w).expect(format!("[-] Failed to write 'wallets.json'").as_str());
-
-            let sd = to_string(&SigningData {signing_data: []}).unwrap();
-            fs::write(SIGNING_DATA_PATH, sd).expect(format!("[-] Failed to write 'signing.json'").as_str());
         }
     }
     
@@ -106,24 +110,20 @@ impl FileOps {
     /// 
     /// # Args
     /// ```
-    /// name: String -> name of account to lookup
-    /// balance: i64 -> new balance to write
+    /// address: String -> name of account to lookup
+    /// balance: i32    -> new balance to write
     /// ```
     /// 
     /// # Returns
     /// Nothing
-    pub fn write_balance(name: String, balance: i64) {
-        if !Wallet::name_exists(&name) {
-            println!("No account found for '{}'", name);
-        } else {
-            let mut base_data = FileOps::parse(WALLETS_PATH);
-            let wallets = base_data["wallets"].as_array_mut().unwrap();
-            for wallet in wallets {
-                if wallet["name"] == name {
-                    wallet["balance"] = to_value(balance).unwrap();
-                    fs::write(WALLETS_PATH, base_data.to_string()).expect("Failed to write file");
-                    break;
-                }
+    pub fn write_balance(address: String, balance: i32) {
+        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let wallets = base_data["wallets"].as_array_mut().unwrap();
+        for wallet in wallets {
+            if wallet["address"].to_string() == address {
+                wallet["balance"] = to_value(balance).unwrap();
+                fs::write(WALLETS_PATH, base_data.to_string()).expect("Failed to write file");
+                break;
             }
         }
     }
