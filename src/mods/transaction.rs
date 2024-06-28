@@ -94,8 +94,16 @@ impl Transaction {
     /// # Returns
     /// Nothing
     pub fn clear() {
-        let t = to_string(&Transactions { transactions: [] }).unwrap();
-        fs::write(TRANSACTIONS_PATH, t)
-            .expect(format!("[-] Failed to write 'transactions.json'").as_str());
+        let t = match to_string(&Transactions { transactions: [] }) {
+            Ok(val) => val,
+            Err(e) => panic!(
+                "Failed to parse transactions to String before clearing: {}",
+                e
+            ),
+        };
+        match fs::write(TRANSACTIONS_PATH, t) {
+            Ok(_) => {}
+            Err(e) => panic!("Failed to write 'transactions.json': {}", e),
+        };
     }
 }

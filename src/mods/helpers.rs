@@ -75,11 +75,13 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
     let mut private_key = String::from("");
     for key_pair in key_data {
         if key_pair["name"] == from {
-            private_key.push_str(
-                key_pair["private_key"]
-                    .as_str()
-                    .expect("Failed to fetch private key while creating transaction"),
-            );
+            let key_value = match key_pair["private_key"].as_str() {
+                Some(val) => val,
+                None => panic!(
+                    "Failed to parse private key from json_serde Value while creating transaction"
+                ),
+            };
+            private_key.push_str(key_value);
         }
     }
 
@@ -129,14 +131,14 @@ pub fn mine_block(name: String) {
     // components of Block hash
     let mut nonce = 0;
     let previous_hash = &last_block["hash"].to_string().replace("\"", "");
-    let mut transactions = FileOps::parse(TRANSACTIONS_PATH);
+    let mut base_data = FileOps::parse(TRANSACTIONS_PATH);
     // set mining difficulty
     let leading_zeros = String::from("0".repeat(2));
     // get block hash
     let mut hash = hash_block(
         &nonce.to_string(),
         &previous_hash.clone(),
-        &transactions.to_string(),
+        &base_data.to_string(),
     );
 
     // compute the correct hash to mine a new Block (00...98de872911a5e etc)
@@ -145,7 +147,7 @@ pub fn mine_block(name: String) {
         hash = hash_block(
             &nonce.to_string(),
             &previous_hash.clone(),
-            &transactions.to_string(),
+            &base_data.to_string(),
         );
     }
 
@@ -157,25 +159,24 @@ pub fn mine_block(name: String) {
     let merkle_root = get_merkle_root(TRANSACTIONS_PATH);
 
     // pay all transactions
-    let transaction_data = transactions["transactions"].as_array_mut().unwrap();
-    for t in transaction_data {
-        if t["from_address"] == "REWARD" {
-            Wallet::update_balance(
-                t["to_address"].to_string(),
-                t["amount"].as_i64().unwrap() as i32,
-                "add",
-            );
+    let transactions = match base_data["transactions"].as_array_mut() {
+        Some(data) => data,
+        None => panic!("Transaction data not found, has the file been moved or deleted?"),
+    };
+
+    for t in transactions {
+        let amount: i32;
+        if let Some(val) = t["amount"].as_i64() {
+            amount = val as i32;
         } else {
-            Wallet::update_balance(
-                t["to_address"].to_string(),
-                t["amount"].as_i64().unwrap() as i32,
-                "add",
-            );
-            Wallet::update_balance(
-                t["from_address"].to_string(),
-                t["amount"].as_i64().unwrap() as i32,
-                "subtract",
-            );
+            panic!("Could not parse transaction amount while mining block");
+        };
+
+        if t["from_address"] == "REWARD" {
+            Wallet::update_balance(t["to_address"].to_string(), amount, "add");
+        } else {
+            Wallet::update_balance(t["to_address"].to_string(), amount, "add");
+            Wallet::update_balance(t["from_address"].to_string(), amount, "subtract");
         }
     }
 
@@ -184,7 +185,7 @@ pub fn mine_block(name: String) {
         hash,
         previous_hash: previous_hash.to_string(),
         nonce,
-        transactions,
+        transactions: base_data,
         merkle_root,
     };
 
@@ -234,9 +235,11 @@ pub fn verify_chain() -> bool {
         }
 
         // validate transactions
-        let transactions = &current_block["transactions"]["transactions"]
-            .as_array_mut()
-            .unwrap();
+        let transactions = match current_block["transactions"]["transactions"].as_array_mut() {
+            Some(data) => data,
+            None => panic!("Transaction data not found, has the file been moved or deleted?"),
+        };
+
         for j in 0..transactions.len() {
             // validate current transaction hash
             let t_hash = hash_transaction(
