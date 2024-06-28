@@ -25,7 +25,7 @@ fn main() {
         // sleep to allow init
         let half_sec = time::Duration::from_millis(500);
         thread::sleep(half_sec);
-    
+
         Block::add_genesis_block();
     }
 
@@ -147,7 +147,10 @@ fn option3() {
         Some(val) => {
             amount = val;
             if val <= 0 {
-                display_msg(Message::Failure("Choose an amount greater than 0".to_string(), None));
+                display_msg(Message::Failure(
+                    "Choose an amount greater than 0".to_string(),
+                    None,
+                ));
                 return;
             }
             if Wallet::get_balance(&senders_name) < amount {
@@ -161,14 +164,12 @@ fn option3() {
                 "Adding new pending transaction\n".to_string(),
                 None,
             ));
-            println!(
-                "\tSenders public key: {}",
-                Wallet::get_wallet_address(&senders_name).unwrap()
-            );
-            println!(
-                "\tRecipients public key: {}",
-                Wallet::get_wallet_address(&recipients_name).unwrap()
-            );
+            if let Some(key) = Wallet::get_wallet_address(&senders_name) {
+                println!("\tSenders public key: {}", key);
+            }
+            if let Some(key) = Wallet::get_wallet_address(&recipients_name) {
+                println!("\tRecipients public key: {}", key);
+            }
             println!("\tAmount: {}\n", &amount);
             create_transaction(senders_name, recipients_name, amount);
             display_msg(Message::Success(

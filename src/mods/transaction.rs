@@ -96,10 +96,13 @@ impl Transaction {
     pub fn clear() {
         let t = match to_string(&Transactions { transactions: [] }) {
             Ok(val) => val,
-            Err(e) => panic!("Failed to parse transactions to String before clearing: {}", e),
+            Err(e) => panic!(
+                "Failed to parse transactions to String before clearing: {}",
+                e
+            ),
         };
         match fs::write(TRANSACTIONS_PATH, t) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => panic!("Failed to write 'transactions.json': {}", e),
         };
     }

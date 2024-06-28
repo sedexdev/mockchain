@@ -77,7 +77,9 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
         if key_pair["name"] == from {
             let key_value = match key_pair["private_key"].as_str() {
                 Some(val) => val,
-                None => panic!("Failed to parse private key from json_serde Value while creating transaction"),
+                None => panic!(
+                    "Failed to parse private key from json_serde Value while creating transaction"
+                ),
             };
             private_key.push_str(key_value);
         }
@@ -171,22 +173,10 @@ pub fn mine_block(name: String) {
         };
 
         if t["from_address"] == "REWARD" {
-            Wallet::update_balance(
-                t["to_address"].to_string(),
-                amount,
-                "add",
-            );
+            Wallet::update_balance(t["to_address"].to_string(), amount, "add");
         } else {
-            Wallet::update_balance(
-                t["to_address"].to_string(),
-                amount,
-                "add",
-            );
-            Wallet::update_balance(
-                t["from_address"].to_string(),
-                amount,
-                "subtract",
-            );
+            Wallet::update_balance(t["to_address"].to_string(), amount, "add");
+            Wallet::update_balance(t["from_address"].to_string(), amount, "subtract");
         }
     }
 

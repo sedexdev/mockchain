@@ -4,7 +4,7 @@ use std::path::Path;
 
 // 3rd party crates
 use serde::Serialize;
-use serde_json::{to_string, to_value, Value};
+use serde_json::{from_str, to_string, to_value, Value};
 
 // imports
 use super::base::{Blockchain, KeyPairs, SigningData, Transactions, Wallets};
@@ -44,28 +44,56 @@ impl FileOps {
     /// Nothing
     pub fn init(preserve_accounts: bool) {
         if !Path::new("./src/data/").exists() {
-            fs::create_dir("./src/data/").expect("Failed to create directory 'data'");
+            match fs::create_dir("./src/data/") {
+                Ok(_) => {}
+                Err(e) => panic!("Error creating data directory: {}", e),
+            };
         }
-        let bc = to_string(&Blockchain { blockchain: [] }).unwrap();
-        fs::write(BLOCKCHAIN_PATH, bc)
-            .expect(format!("[-] Failed to write 'blockchain.json'").as_str());
+        let bc = match to_string(&Blockchain { blockchain: [] }) {
+            Ok(val) => val,
+            Err(e) => panic!("Error initializing data file: {}", e),
+        };
+        match fs::write(BLOCKCHAIN_PATH, bc) {
+            Ok(_) => {}
+            Err(e) => panic!("Failed to write blockchain.json: {}", e),
+        };
 
-        let t = to_string(&Transactions { transactions: [] }).unwrap();
-        fs::write(TRANSACTIONS_PATH, t)
-            .expect(format!("[-] Failed to write 'transactions.json'").as_str());
+        let t = match to_string(&Transactions { transactions: [] }) {
+            Ok(val) => val,
+            Err(e) => panic!("Error initializing data file: {}", e),
+        };
+        match fs::write(TRANSACTIONS_PATH, t) {
+            Ok(_) => {}
+            Err(e) => panic!("Failed to write transaction.json: {}", e),
+        };
 
-        let sd = to_string(&SigningData { signing_data: [] }).unwrap();
-        fs::write(SIGNING_DATA_PATH, sd)
-            .expect(format!("[-] Failed to write 'signing.json'").as_str());
+        let sd = match to_string(&SigningData { signing_data: [] }) {
+            Ok(val) => val,
+            Err(e) => panic!("Error initializing data file: {}", e),
+        };
+        match fs::write(SIGNING_DATA_PATH, sd) {
+            Ok(_) => {}
+            Err(e) => panic!("Failed to write signing.json: {}", e),
+        };
 
         if !preserve_accounts {
-            let kp = to_string(&KeyPairs { keypairs: [] }).unwrap();
-            fs::write(KEYPAIRS_PATH, kp)
-                .expect(format!("[-] Failed to write 'keypairs.json'").as_str());
+            let kp = match to_string(&KeyPairs { keypairs: [] }) {
+                Ok(val) => val,
+                Err(e) => panic!("Error initializing data file: {}", e),
+            };
+            match fs::write(KEYPAIRS_PATH, kp) {
+                Ok(_) => {}
+                Err(e) => panic!("Failed to write keypairs.json: {}", e),
+            };
 
-            let w = to_string(&Wallets { wallets: [] }).unwrap();
-            fs::write(WALLETS_PATH, w)
-                .expect(format!("[-] Failed to write 'wallets.json'").as_str());
+            let w = match to_string(&Wallets { wallets: [] }) {
+                Ok(val) => val,
+                Err(e) => panic!("Error initializing data file: {}", e),
+            };
+            match fs::write(WALLETS_PATH, w) {
+                Ok(_) => {}
+                Err(e) => panic!("Failed to write wallets.json: {}", e),
+            };
         }
     }
 
@@ -96,9 +124,16 @@ impl FileOps {
         } else {
             // parse data from base file
             let mut base_data = FileOps::parse(path);
-            base_data[base].as_array_mut().unwrap().push(value);
+            let data = match base_data[base].as_array_mut() {
+                Some(d) => d,
+                None => panic!("Data not found while writing, has the file been moved or deleted?"),
+            };
+            data.push(value);
             // write data back to file (full overwrite with new data appended)
-            fs::write(path, base_data.to_string()).expect("Failed to write file");
+            match fs::write(path, base_data.to_string()) {
+                Ok(_) => {}
+                Err(e) => panic!("Failed to write file: {}", e),
+            };
         }
     }
 
@@ -117,12 +152,22 @@ impl FileOps {
     /// Nothing
     pub fn write_balance(address: String, balance: i32) {
         let mut base_data = FileOps::parse(WALLETS_PATH);
-        let wallets = base_data["wallets"].as_array_mut().unwrap();
+        let wallets = match base_data["wallets"].as_array_mut() {
+            Some(data) => data,
+            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+        };
         for wallet in wallets {
             if wallet["address"].to_string() == address {
-                wallet["balance"] = to_value(balance).unwrap();
-                fs::write(WALLETS_PATH, base_data.to_string()).expect("Failed to write file");
-                break;
+                if let Ok(value) = to_value(balance) {
+                    wallet["balance"] = value;
+                    match fs::write(WALLETS_PATH, base_data.to_string()) {
+                        Ok(_) => {}
+                        Err(e) => panic!("Failed to write file: {}", e),
+                    };
+                    break;
+                } else {
+                    panic!("Failed to write new balance");
+                };
             }
         }
     }
@@ -146,6 +191,10 @@ impl FileOps {
             Ok(content) => content,
             Err(e) => panic!("Error reading file content: {}", e),
         };
-        serde_json::from_str(&json_str).expect("Poorly formatted JSON found")
+        let value = match from_str(&json_str) {
+            Ok(val) => val,
+            Err(e) => panic!("Poorly formatted JSON found: {}", e),
+        };
+        value
     }
 }
