@@ -2,6 +2,7 @@
 mod mods;
 
 // std library
+use std::path::Path;
 use std::{thread, time};
 
 use mods::constants::{
@@ -18,13 +19,15 @@ use mods::{
 };
 
 fn main() {
-    FileOps::init(false);
+    if !Path::new(BLOCKCHAIN_PATH).exists() {
+        FileOps::init(false);
 
-    // sleep to allow init
-    let half_sec = time::Duration::from_millis(500);
-    thread::sleep(half_sec);
-
-    Block::add_genesis_block();
+        // sleep to allow init
+        let half_sec = time::Duration::from_millis(500);
+        thread::sleep(half_sec);
+    
+        Block::add_genesis_block();
+    }
 
     Repl::print_intro();
     Repl::print_options();
