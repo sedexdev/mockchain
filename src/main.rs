@@ -3,13 +3,12 @@ mod mods;
 
 // std library
 use std::{thread, time};
-use std::collections::HashMap;
 
-use mods::constants::BLOCKCHAIN_PATH;
+use mods::constants::{BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH};
+use mods::wallet::Wallet;
 // imports
 use mods::{
     block::Block,
-    crypto::KeyPair, 
     file::FileOps,
     helpers::{
         create_transaction,
@@ -21,19 +20,6 @@ use mods::{
 };
 
 fn main() {
-    // let mut choices = HashMap::new();
-    // choices.insert(1, create_wallet);
-    // choices.insert(2, mine_block);    
-    // choices.insert(3, create_transaction);    
-    // choices.insert(4, mine_block);    
-    // choices.insert(5, mine_block);    
-    // choices.insert(6, mine_block);    
-    // choices.insert(7, mine_block);    
-    // choices.insert(8, mine_block);    
-    // choices.insert(9, mine_block);    
-    // choices.insert(10, mine_block);    
-
-
     FileOps::init(false);
 
     // sleep to allow init
@@ -41,85 +27,147 @@ fn main() {
     thread::sleep(half_sec);
 
     Block::add_genesis_block();
-    Repl::print_intro();
-
-    loop {
-        Repl::print_options();
-
-        mine_block("TEST".to_string());
-
-        // sleep to allow mining
-        let one_sec = time::Duration::from_millis(1000);
-        thread::sleep(one_sec);
-
-        println!("{}", FileOps::parse(BLOCKCHAIN_PATH));
-
-        break;
-        
-    }
-}
-
-
-// Use these notes to construct app logic
-
-/*
-
-    FileOps::init(false);
-
+    
     Repl::print_intro();
     Repl::print_options();
 
-    print!("Please enter a choice: ");
-    let input: i32 = match Repl::get_input() {
-        Some(val) => val,
-        None => panic!("[-] Error getting command line input, value passed was not an integer"),
+    loop {
+
+        print!("Select an option: ");
+        let _ = match Repl::get_input() {
+            Some(choice) => match choice {
+                0 => Repl::print_options(),
+                1 => option1(),
+                2 => option2(),
+                3 => option3(),
+                4 => println!("\n{:#?}\n", FileOps::parse(BLOCKCHAIN_PATH)),
+                5 => println!("\n{:#?}\n", FileOps::parse(TRANSACTIONS_PATH)),
+                6 => println!("\n{:#?}\n", FileOps::parse(WALLETS_PATH)),
+                7 => println!("\n{:#?}\n", FileOps::parse(KEYPAIRS_PATH)),
+                8 => println!("\n{:#?}\n", FileOps::parse(SIGNING_DATA_PATH)),
+                9 => option9(),
+                10 => println!("VALID CHAIN: {}", verify_chain()),
+                11 => {
+                    println!("See you again soon! 👋 Your data files will be preserved 😃");
+                    break;
+                },
+                _ => println!("[-] Please enter a valid integer to select an option")
+            },
+            None => println!("[-] Please enter a valid integer to select an option"),
+        };
+    }
+}
+
+// Options helper functions
+
+fn option1() {
+    print!("Add a name for this wallet: ");
+    let _ = match Repl::get_input() {
+        Some(name) => {
+            if Wallet::name_exists(&name) {
+                println!("[-] Wallet with name '{}' already exists", &name);
+                return;
+            }
+            println!("[+] Creating wallet for '{}'", &name);
+            create_wallet(name);
+            println!("[+] Wallet created");
+        },
+        None => println!("[-] Invalid name"),
     };
-    println!("Input = {:#?}", input);
+}
 
-    print!("Please enter a string: ");
-    let input2: String = match Repl::get_input() {
-        Some(val) => val,
-        None => panic!("[-] Error getting command line string input"),
+fn option2() {
+    print!("Name of account mining this block: ");
+    let _ = match Repl::get_input() {
+        Some(name) => {
+            if !Wallet::name_exists(&name) {
+                println!("[-] No wallet found under name '{}'", &name);
+            } else {
+                mine_block(name.clone());
+                println!("[+] New block mined successfully. A reward transaction has been added for '{}'", &name);
+            }
+        },
+        None => println!("[-] Invalid name"),
     };
-    println!("Input = {:#?}", input2);
+}
 
-    // sleep to allow init
-    let one_sec = time::Duration::from_millis(1000);
-    thread::sleep(one_sec);
+fn option3() {
+    let mut senders_name = String::new();
+    let mut recipients_name = String::new();
+    let amount: i32;
+    print!("Name on senders wallet: ");
+    let _ = match Repl::get_input() {
+        Some(name) => {
+            if !Wallet::name_exists(&name) {
+                println!("[-] No wallet found under name '{}'", &name);
+                return;
+            }
+            senders_name = name;
+        },
+        None => println!("[-] Invalid name"),
+    };
+    print!("Name on recipients wallet: ");
+    let _ = match Repl::get_input() {
+        Some(name) => {
+            if !Wallet::name_exists(&name) {
+                println!("[-] No wallet found under name '{}'", &name);
+                return;
+            }
+            recipients_name = name;
+        },
+        None => println!("[-] Invalid name"),
+    };
+    print!("Amount: ");
+    let _ = match Repl::get_input() {
+        Some(val) => {
+            amount = val;
+            if Wallet::get_balance(&senders_name) < amount {
+                println!("[-] Not enough funds to send {} from {}'s account", &amount, &senders_name);
+                return;
+            }
+            println!("[+] Adding new pending transaction\n");
+            println!("\tSenders public key: {}", Wallet::get_wallet_address(&senders_name).unwrap());
+            println!("\tRecipients public key: {}", Wallet::get_wallet_address(&recipients_name).unwrap());
+            println!("\tAmount: {}", &amount);
+            create_transaction(senders_name, recipients_name, amount);
+            println!("\n[+] Transaction added successfully");
+        },
+        None => println!("[-] Please enter a positive whole number"),
+    };
+}
 
-    Block::add_genesis_block();
-    
-    create_wallet(String::from("TEST"));
-    create_wallet(String::from("TEST2"));
-
-    // sleep to allow wallet creation
-    let one_sec = time::Duration::from_millis(1000);
-    thread::sleep(one_sec);
-
-    let from_address = KeyPair::get_key(String::from("TEST"), String::from("public"));
-    let to_address = KeyPair::get_key(String::from("TEST2"), String::from("public"));
-
-    create_transaction(
-        String::from("TEST"),
-        from_address,
-        to_address,
-        10,
-    );
-
-    mine_block(String::from("TEST"));
-    mine_block(String::from("TEST2"));
-    mine_block(String::from("TEST"));
-    mine_block(String::from("TEST2"));
-    mine_block(String::from("TEST"));
-
-    // sleep to allow everything to update
-    let one_sec = time::Duration::from_millis(1000);
-    thread::sleep(one_sec);
-
-    if verify_chain() {
-        println!("[+] CHAIN IS VALID");
-    } else {
-        println!("[-] CHAIN IS INVALID");
-    }; 
-
-*/
+fn option9() {
+    print!("!! This action will wipe out the current blockchain and transaction data. Continue? (y/n) ");
+    let wipe: String = match Repl::get_input() {
+        Some(val) => val,
+        None => "[-] Invalid option".to_string(),
+    };
+    match wipe.as_str() {
+        "y" => {
+            print!("Would you like to preserve existing wallets? (y/n) ");
+            let keep: String = match Repl::get_input() {
+                Some(val) => val,
+                None => "[-] Invalid option".to_string(),
+            };
+            match keep.as_str() {
+                "y" => {
+                    println!("[+] Re-initializing blockchain...");
+                    FileOps::init(true);
+                    println!("[+] Blockchain init completed successfully");
+                    println!("[+] Wallet data has been preserved");
+                },
+                "n" => {
+                    println!("[+] Re-initializing blockchain...");
+                    FileOps::init(false);
+                    println!("[+] Blockchain init completed successfully");
+                    println!("[+] Wallet data has been deleted");
+                },
+                "[-] Invalid option" => println!("{}", wipe),
+                _ => println!("{}", wipe),
+            }
+        },
+        "n" => println!("[+] Operation cancelled"),
+        "[-] Invalid option" => println!("{}", wipe),
+        _ => println!("{}", wipe),
+    };
+}

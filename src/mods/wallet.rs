@@ -70,8 +70,8 @@ impl Wallet {
     /// ```
     /// Option<String>
     /// ```
-    pub fn get_wallet_address(name: String) -> Option<String> {
-        if !Wallet::name_exists(&name) {
+    pub fn get_wallet_address(name: &String) -> Option<String> {
+        if !Wallet::name_exists(name) {
             None
         } else {
             let mut json_obj = FileOps::parse(WALLETS_PATH);
@@ -80,7 +80,7 @@ impl Wallet {
             let mut wallet_name = String::from("");
 
             for wallet in wallets {
-                if wallet["name"] == name {
+                if wallet["name"] == *name {
                     wallet_name.push_str(wallet["address"].to_string().as_str());
                 }
             }
@@ -96,27 +96,23 @@ impl Wallet {
     /// 
     /// # Args
     /// ```
-    /// name: String -> name of account to lookup
-    /// amount: i64  -> amount to increment balance by
-    /// op: &str     -> "add" | "subtract" 
+    /// address: String -> wallet address to update
+    /// amount: i32     -> amount to increment balance by
+    /// op: &str        -> "add" | "subtract" 
     /// ```
     /// 
     /// # Returns
     /// Nothing
-    pub fn update_balance(name: String, amount: i64, op: &str) {
-        if !Wallet::name_exists(&name) {
-            println!("No account found for '{}'", &name);
-        } else {
-            let mut base_data = FileOps::parse(WALLETS_PATH);
-            let wallets = base_data["wallets"].as_array_mut().unwrap();
-            for wallet in wallets {
-                if wallet["name"] == name {
-                    let mut balance = wallet["balance"].as_i64().unwrap();
-                    if op == "add" { balance += amount; } 
-                    if op == "subtract" { balance -= amount; }
-                    FileOps::write_balance(name, balance);
-                    break;
-                }
+    pub fn update_balance(address: String, amount: i32, op: &str) {
+        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let wallets = base_data["wallets"].as_array_mut().unwrap();
+        for wallet in wallets {
+            if wallet["address"].to_string() == address {
+                let mut balance = wallet["balance"].as_i64().unwrap() as i32;
+                if op == "add" { balance += amount; } 
+                if op == "subtract" { balance -= amount; }
+                FileOps::write_balance(address, balance);
+                break;
             }
         }
     }
@@ -128,27 +124,23 @@ impl Wallet {
     /// 
     /// # Args
     /// ```
-    /// name: String -> name of account to lookup
+    /// name: &String -> name of account to lookup
     /// ```
     /// 
     /// # Returns
     /// ```
-    /// Option<i64>
+    /// i32
     /// ```
-    pub fn get_balance(name: String) -> Option<i64> {
-        if !Wallet::name_exists(&name) {
-            None
-        } else {
-            let mut balance: Option<i64> = None;
-            let mut base_data = FileOps::parse(WALLETS_PATH);
-            let wallets = base_data["wallets"].as_array_mut().unwrap();
-            for wallet in wallets {
-                if wallet["name"] == name {
-                    balance = Some(wallet["balance"].as_i64().unwrap());
-                    break;
-                }
+    pub fn get_balance(name: &String) -> i32 {
+        let mut balance: i32 = 0;
+        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let wallets = base_data["wallets"].as_array_mut().unwrap();
+        for wallet in wallets {
+            if wallet["name"] == *name {
+                balance = wallet["balance"].as_i64().unwrap() as i32;
+                break;
             }
-            balance
         }
+        balance
     }
 }

@@ -34,7 +34,7 @@ impl Repl {
     pub fn print_intro() {
         println!("\n\t\t\t-- WELCOME TO MOCKCHAIN --\n");
         println!("This program is a text based blockchain simulation designed to aid understanding");
-        println!("of how blockchains work.\n");
+        println!("of how blockchains work.");
     }
     
     /// Prints the options available in the simulation
@@ -48,7 +48,8 @@ impl Repl {
     /// # Returns
     /// Nothing
     pub fn print_options() {
-        println!("OPTIONS\n");
+        println!("\nOPTIONS\n");
+        println!("0. Show options");
         println!("1. Create a wallet");
         println!("2. Mine a block");
         println!("3. Add a new transaction");
@@ -58,7 +59,8 @@ impl Repl {
         println!("7. Display key pairs");
         println!("8. Display signatures");
         println!("9. Re-initialize blockchain");
-        println!("10. Exit\n");
+        println!("10. Verify blockchain");
+        println!("11. Exit\n");
     }
     
     /// Gets user input from the console and performs

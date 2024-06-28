@@ -14,7 +14,7 @@ use super::{
     crypto::{get_merkle_root, hash_block, hash_transaction, KeyPair}, 
     file::FileOps,
     signing_data::Signing,
-    transaction::Transaction,
+    transaction::{self, Transaction},
     wallet::Wallet,
 };
 
@@ -48,15 +48,24 @@ pub fn create_wallet(name: String) {
 /// 
 /// # Args
 /// ```
-/// name: String         -> name of sender
-/// from_address: String -> senders public key
-/// to_address: String   -> recipient public key
-/// amount: i32          -> amount
+/// from: String -> name of sender
+/// to: String   -> name of recipient
+/// amount: i32  -> amount
 /// ```
 /// 
 /// # Returns
 /// Nothing
-pub fn create_transaction(name: String, from_address: String, to_address: String, amount: i32) {
+pub fn create_transaction(from: String, to: String, amount: i32) {
+    // get wallet public keys
+    let from_address = match Wallet::get_wallet_address(&from) {
+        Some(key) => key.replace("\"", ""),
+        None => return
+    };
+    let to_address = match Wallet::get_wallet_address(&to) {
+        Some(key) => key.replace("\"", ""),
+        None => return
+    };
+
     // get transaction hash
     let hash = hash_transaction(&from_address, &to_address, &amount.to_string());
     
@@ -69,7 +78,7 @@ pub fn create_transaction(name: String, from_address: String, to_address: String
 
     let mut private_key = String::from("");
     for key_pair in key_data {
-        if key_pair["name"] == name {
+        if key_pair["name"] == from {
             private_key.push_str(key_pair["private_key"].as_str().expect("[-] Failed to fetch private key"));
         }
     }
@@ -78,7 +87,7 @@ pub fn create_transaction(name: String, from_address: String, to_address: String
     let (signature, signing_key) = KeyPair::sign(&hash, private_key);
     
     let signing_data = Signing {
-        name,
+        name: from,
         hash: hash.clone(),
         signing_key,
         signature: signature.clone(),
@@ -120,7 +129,7 @@ pub fn mine_block(name: String) {
     // components of Block hash
     let mut nonce = 0;
     let previous_hash = &last_block["hash"].to_string().replace("\"", "");
-    let transactions = FileOps::parse(TRANSACTIONS_PATH);
+    let mut transactions = FileOps::parse(TRANSACTIONS_PATH);
     // set mining difficulty
     let leading_zeros = String::from("0".repeat(2));
     // get block hash
@@ -138,6 +147,17 @@ pub fn mine_block(name: String) {
 
     // get the merkle root of this Blocks Transactions
     let merkle_root = get_merkle_root(TRANSACTIONS_PATH);
+
+    // pay all transactions
+    let transaction_data = transactions["transactions"].as_array_mut().unwrap();
+    for t in transaction_data {
+        if t["from_address"] == "REWARD" {
+            Wallet::update_balance(t["to_address"].to_string(), t["amount"].as_i64().unwrap() as i32, "add");
+        } else {
+            Wallet::update_balance(t["to_address"].to_string(), t["amount"].as_i64().unwrap() as i32, "add");
+            Wallet::update_balance(t["from_address"].to_string(), t["amount"].as_i64().unwrap() as i32, "subtract");
+        }
+    }
     
     let block = Block {
         timestamp,
