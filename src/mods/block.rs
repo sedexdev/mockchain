@@ -4,20 +4,24 @@ use serde::Serialize;
 use serde_json::{to_string, to_value, Value};
 
 // imports
-use super::{constants::{BLOCKCHAIN_PATH, TRANSACTIONS_PATH}, crypto::{get_merkle_root, hash_block}, file::FileOps};
+use super::{
+    constants::{BLOCKCHAIN_PATH, TRANSACTIONS_PATH},
+    crypto::{get_merkle_root, hash_block},
+    file::FileOps,
+};
 
 /// Defines a block to append to the chain
-/// 
+///
 /// # Fields
 /// ```
 /// timestamp: String        -> timestamp of block creation
 /// hash: String             -> hash of this Block (default value of "0".repeat(64))
 /// previous_hash: String    -> "None" by default,
-/// nonce: u32               -> nonce used to produce this block 
+/// nonce: u32               -> nonce used to produce this block
 /// transactions: [Value; 0] -> transactions in this Block
 /// merkle_root: String      -> hash of all transactions in this Block
 /// ```
-/// 
+///
 /// # Derives
 /// ```
 /// serde::Serialize, Debug
@@ -34,16 +38,15 @@ pub struct Block {
 }
 
 impl Block {
-
     /// Creates and writes the genesis block to
     /// the blockchain
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// None
-    /// 
+    ///
     /// # Returns
     /// Nothing
     pub fn add_genesis_block() {

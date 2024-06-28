@@ -1,50 +1,49 @@
 // std
-use std::str::FromStr;
 use std::fmt::{Debug, Display};
+use std::str::FromStr;
 
 // 3rd party crates
 use text_io::try_read;
 
 /// Basis structure for displaying and reading
 /// information during application runtime
-/// 
+///
 /// # Visibility
 /// public
-/// 
+///
 /// # Fields
 /// ```
 /// option: i32 - users menu choice
 /// ```
-pub struct Repl {
-    option: i32
-}
+pub struct Repl {}
 
 impl Repl {
-    
     /// Prints the options availble in the simulation
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// None
-    /// 
+    ///
     /// # Returns
     /// Nothing
     pub fn print_intro() {
         println!("\n\t\t\t-- WELCOME TO MOCKCHAIN --\n");
-        println!("This program is a text based blockchain simulation designed to aid understanding");
+        println!(
+            "This program is a text based blockchain simulation designed to aid understanding"
+        );
         println!("of how blockchains work.");
     }
-    
+
     /// Prints the options available in the simulation
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// None
-    /// 
+    ///
     /// # Returns
     /// Nothing
     pub fn print_options() {
@@ -62,18 +61,18 @@ impl Repl {
         println!("10. Verify blockchain");
         println!("11. Exit\n");
     }
-    
+
     /// Gets user input from the console and performs
-    /// error checking. Returns the value if checks pass 
-    /// 
+    /// error checking. Returns the value if checks pass
+    ///
     /// # Args
     /// None
-    /// 
+    ///
     /// # Returns
     /// ```
     /// Option<T>
     /// ```
-    /// 
+    ///
     /// # Example
     /// ```
     /// let _input: i32 = match get_input() {
@@ -81,12 +80,15 @@ impl Repl {
     ///     None => -1,
     /// };
     /// ```
-    pub fn get_input<T: Display + FromStr + Debug>() -> Option<T> where <T as FromStr>::Err: Debug {
+    pub fn get_input<T: Display + FromStr + Debug>() -> Option<T>
+    where
+        <T as FromStr>::Err: Debug,
+    {
         let i: Option<T> = match try_read!() {
             Ok(val) => Some(val),
             Err(_) => None,
         };
-    
+
         if i.is_none() {
             None
         } else {

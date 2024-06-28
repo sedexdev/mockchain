@@ -9,19 +9,16 @@ use serde_json::to_string;
 use super::{
     base::Transactions,
     constants::{SIGNING_DATA_PATH, TRANSACTIONS_PATH},
-    crypto::{
-        hash_transaction,
-        KeyPair
-    },
+    crypto::{hash_transaction, KeyPair},
     file::FileOps,
-    signing_data::Signing
+    signing_data::Signing,
 };
 
 /// Define a Transaction object
-/// 
+///
 /// # Visibility
 /// public
-/// 
+///
 /// # Fields
 /// ```
 /// hash: String,
@@ -30,7 +27,7 @@ use super::{
 /// amount: i32,
 /// signature: String
 /// ```
-/// 
+///
 /// # Derives
 /// ```
 /// serde::Serialize, Debug
@@ -41,24 +38,23 @@ pub struct Transaction {
     pub from_address: String,
     pub to_address: String,
     pub amount: i32,
-    pub signature: String
+    pub signature: String,
 }
 
 impl Transaction {
-
     /// Generates a reward Transaction after a Block has
     /// been mined. Once the current transactions have been
     /// cleared this transaction is added as the first in
     /// a new list of transactions
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// ```
     /// name: String -> name of miner of last Block
     /// ```
-    /// 
+    ///
     /// # Returns
     /// Nothing
     pub fn add_reward(name: String) {
@@ -88,17 +84,18 @@ impl Transaction {
     }
 
     /// Clears all current transactions after mining
-    /// 
+    ///
     /// # Visibility
     /// public
-    /// 
+    ///
     /// # Args
     /// None
-    /// 
+    ///
     /// # Returns
     /// Nothing
     pub fn clear() {
-        let t = to_string(&Transactions {transactions: []}).unwrap();
-        fs::write(TRANSACTIONS_PATH, t).expect(format!("[-] Failed to write 'transactions.json'").as_str());
+        let t = to_string(&Transactions { transactions: [] }).unwrap();
+        fs::write(TRANSACTIONS_PATH, t)
+            .expect(format!("[-] Failed to write 'transactions.json'").as_str());
     }
 }
