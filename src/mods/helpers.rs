@@ -69,7 +69,7 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
     let mut json_data = FileOps::parse(KEYPAIRS_PATH);
     let key_data = match json_data["keypairs"].as_array_mut() {
         Some(arr) => arr,
-        None => panic!("[-] Failed to read key data from 'keypairs.json'"),
+        None => panic!("Failed to read key data from 'keypairs.json'"),
     };
 
     let mut private_key = String::from("");
@@ -78,7 +78,7 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
             private_key.push_str(
                 key_pair["private_key"]
                     .as_str()
-                    .expect("[-] Failed to fetch private key"),
+                    .expect("Failed to fetch private key while creating transaction"),
             );
         }
     }
@@ -122,7 +122,7 @@ pub fn mine_block(name: String) {
     let mut base_data = FileOps::parse(BLOCKCHAIN_PATH);
     let blockchain = match base_data["blockchain"].as_array_mut() {
         Some(data) => data,
-        None => panic!("[-] Failed to parse blockchain data from 'blockchain.json'"),
+        None => panic!("Failed to parse blockchain data from 'blockchain.json'"),
     };
 
     let last_block = &blockchain[blockchain.len() - 1];
@@ -209,7 +209,7 @@ pub fn verify_chain() -> bool {
     let mut bc_base_data = FileOps::parse(BLOCKCHAIN_PATH);
     let blockchain = match bc_base_data["blockchain"].as_array_mut() {
         Some(data) => data,
-        None => panic!("[-] Failed to parse blockchain data from 'blockchain.json'"),
+        None => panic!("Failed to parse blockchain data from 'blockchain.json'"),
     };
 
     // loop over each block in the chain
@@ -255,7 +255,7 @@ pub fn verify_chain() -> bool {
             let mut sd_base_data = FileOps::parse(SIGNING_DATA_PATH);
             let signing_data = match sd_base_data["signing_data"].as_array_mut() {
                 Some(data) => data,
-                None => panic!("[-] Failed to parse signing data from 'signing.json'"),
+                None => panic!("Failed to parse signing data from 'signing.json'"),
             };
 
             // verify each hash using the signing key
