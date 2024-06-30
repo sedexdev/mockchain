@@ -46,7 +46,7 @@ pub fn display_msg(level: Message) {
                     let expanded = replace(m, val);
                     print!("[!] {}", expanded);
                 }
-                None => println!("[!] {}", m),
+                None => print!("[!] {}", m),
             };
         }
         Message::Failure(m, v) => {

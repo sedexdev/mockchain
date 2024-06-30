@@ -1,14 +1,16 @@
+#[macro_use]
+extern crate lazy_static;
+
 // modules
 mod mods;
 
 // std library
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{thread, time};
 
-use mods::constants::{
-    BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH,
-};
-use mods::wallet::Wallet;
+// 3rd party crates
+use dirs::home_dir;
+
 // imports
 use mods::{
     block::Block,
@@ -16,10 +18,53 @@ use mods::{
     helpers::{create_transaction, create_wallet, mine_block, verify_chain},
     messaging::{display_msg, Message},
     repl::Repl,
+    wallet::Wallet,
 };
 
+// static references to data file paths
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref HOME: PathBuf = {
+        match home_dir() {
+            Some(dir) => dir,
+            None => panic!("Home directory not found to write data files, aborting"),
+        }
+    };
+}
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref DATA_PATH: PathBuf = HOME.as_path().join(".mockchain").join("data");
+}
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref BLOCKCHAIN_PATH: PathBuf = DATA_PATH.as_path().join("blockchain.json");
+}
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref KEYPAIRS_PATH: PathBuf = DATA_PATH.as_path().join("keypairs.json");
+}
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref SIGNING_DATA_PATH: PathBuf = DATA_PATH.as_path().join("signing.json");
+}
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref TRANSACTIONS_PATH: PathBuf = DATA_PATH.as_path().join("transactions.json");
+}
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref WALLETS_PATH: PathBuf = DATA_PATH.as_path().join("wallets.json");
+}
+
 fn main() {
-    if !Path::new(BLOCKCHAIN_PATH).exists() {
+    if !Path::new(BLOCKCHAIN_PATH.as_path()).exists() {
         FileOps::init(false);
 
         // sleep to allow init
@@ -40,11 +85,11 @@ fn main() {
                 1 => option1(),
                 2 => option2(),
                 3 => option3(),
-                4 => println!("\n{:#?}\n", FileOps::parse(BLOCKCHAIN_PATH)),
-                5 => println!("\n{:#?}\n", FileOps::parse(TRANSACTIONS_PATH)),
-                6 => println!("\n{:#?}\n", FileOps::parse(WALLETS_PATH)),
-                7 => println!("\n{:#?}\n", FileOps::parse(KEYPAIRS_PATH)),
-                8 => println!("\n{:#?}\n", FileOps::parse(SIGNING_DATA_PATH)),
+                4 => println!("\n{:#?}\n", FileOps::parse(BLOCKCHAIN_PATH.as_path())),
+                5 => println!("\n{:#?}\n", FileOps::parse(TRANSACTIONS_PATH.as_path())),
+                6 => println!("\n{:#?}\n", FileOps::parse(WALLETS_PATH.as_path())),
+                7 => println!("\n{:#?}\n", FileOps::parse(KEYPAIRS_PATH.as_path())),
+                8 => println!("\n{:#?}\n", FileOps::parse(SIGNING_DATA_PATH.as_path())),
                 9 => option9(),
                 10 => println!("VALID CHAIN: {}", verify_chain()),
                 11 => {

@@ -2,8 +2,8 @@
 use serde::Serialize;
 
 // imports
-use super::constants::WALLETS_PATH;
 use super::file::FileOps;
+use crate::WALLETS_PATH;
 
 /// Defines a Wallet object with name, address, and balance
 ///
@@ -44,7 +44,7 @@ impl Wallet {
     /// bool
     /// ```
     pub fn name_exists(name: &String) -> bool {
-        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
             None => panic!("Wallet data not found, has the file been moved or deleted?"),
@@ -76,7 +76,7 @@ impl Wallet {
         if !Wallet::name_exists(name) {
             None
         } else {
-            let mut base_data = FileOps::parse(WALLETS_PATH);
+            let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
             let wallets = match base_data["wallets"].as_array_mut() {
                 Some(data) => data,
                 None => panic!("Wallet data not found, has the file been moved or deleted?"),
@@ -109,7 +109,7 @@ impl Wallet {
     /// # Returns
     /// Nothing
     pub fn update_balance(address: String, amount: i32, op: &str) {
-        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
             None => panic!("Wallet data not found, has the file been moved or deleted?"),
@@ -148,7 +148,7 @@ impl Wallet {
     /// ```
     pub fn get_balance(name: &String) -> i32 {
         let mut balance: i32 = 0;
-        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
             None => panic!("Wallet data not found, has the file been moved or deleted?"),

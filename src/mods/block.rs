@@ -5,10 +5,10 @@ use serde_json::{to_string, to_value, Value};
 
 // imports
 use super::{
-    constants::{BLOCKCHAIN_PATH, TRANSACTIONS_PATH},
     crypto::{get_merkle_root, hash_block},
     file::FileOps,
 };
+use crate::{BLOCKCHAIN_PATH, TRANSACTIONS_PATH};
 
 /// Defines a block to append to the chain
 ///
@@ -71,7 +71,7 @@ impl Block {
             &String::from("N/A"),
             &transactions.to_string(),
         );
-        let merkle_root = get_merkle_root(TRANSACTIONS_PATH);
+        let merkle_root = get_merkle_root(TRANSACTIONS_PATH.as_path());
         let genesis_block = Block {
             timestamp,
             hash,
@@ -80,6 +80,6 @@ impl Block {
             transactions,
             merkle_root,
         };
-        FileOps::write(BLOCKCHAIN_PATH, "blockchain", genesis_block);
+        FileOps::write(BLOCKCHAIN_PATH.as_path(), "blockchain", genesis_block);
     }
 }

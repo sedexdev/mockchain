@@ -8,11 +8,11 @@ use serde_json::to_string;
 // imports
 use super::{
     base::Transactions,
-    constants::{SIGNING_DATA_PATH, TRANSACTIONS_PATH},
     crypto::{hash_transaction, KeyPair},
     file::FileOps,
     signing_data::Signing,
 };
+use crate::{SIGNING_DATA_PATH, TRANSACTIONS_PATH};
 
 /// Define a Transaction object
 ///
@@ -79,8 +79,8 @@ impl Transaction {
             signature,
         };
 
-        FileOps::write(TRANSACTIONS_PATH, "transactions", reward);
-        FileOps::write(SIGNING_DATA_PATH, "signing_data", signing_data);
+        FileOps::write(TRANSACTIONS_PATH.as_path(), "transactions", reward);
+        FileOps::write(SIGNING_DATA_PATH.as_path(), "signing_data", signing_data);
     }
 
     /// Clears all current transactions after mining
@@ -101,7 +101,7 @@ impl Transaction {
                 e
             ),
         };
-        match fs::write(TRANSACTIONS_PATH, t) {
+        match fs::write(TRANSACTIONS_PATH.as_path(), t) {
             Ok(_) => {}
             Err(e) => panic!("Failed to write 'transactions.json': {}", e),
         };

@@ -8,8 +8,8 @@ use serde_json::{from_str, to_string, to_value, Value};
 
 // imports
 use super::base::{Blockchain, KeyPairs, SigningData, Transactions, Wallets};
-use super::constants::{
-    BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH,
+use crate::{
+    BLOCKCHAIN_PATH, DATA_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH,
 };
 
 /// File operations for working with JSON
@@ -43,8 +43,8 @@ impl FileOps {
     /// # Returns
     /// Nothing
     pub fn init(preserve_accounts: bool) {
-        if !Path::new("./src/data/").exists() {
-            match fs::create_dir("./src/data/") {
+        if !Path::new(DATA_PATH.as_path()).exists() {
+            match fs::create_dir_all(DATA_PATH.as_path()) {
                 Ok(_) => {}
                 Err(e) => panic!("Error creating data directory: {}", e),
             };
@@ -53,7 +53,7 @@ impl FileOps {
             Ok(val) => val,
             Err(e) => panic!("Error initializing data file: {}", e),
         };
-        match fs::write(BLOCKCHAIN_PATH, bc) {
+        match fs::write(BLOCKCHAIN_PATH.as_path(), bc) {
             Ok(_) => {}
             Err(e) => panic!("Failed to write blockchain.json: {}", e),
         };
@@ -62,7 +62,7 @@ impl FileOps {
             Ok(val) => val,
             Err(e) => panic!("Error initializing data file: {}", e),
         };
-        match fs::write(TRANSACTIONS_PATH, t) {
+        match fs::write(TRANSACTIONS_PATH.as_path(), t) {
             Ok(_) => {}
             Err(e) => panic!("Failed to write transaction.json: {}", e),
         };
@@ -71,7 +71,7 @@ impl FileOps {
             Ok(val) => val,
             Err(e) => panic!("Error initializing data file: {}", e),
         };
-        match fs::write(SIGNING_DATA_PATH, sd) {
+        match fs::write(SIGNING_DATA_PATH.as_path(), sd) {
             Ok(_) => {}
             Err(e) => panic!("Failed to write signing.json: {}", e),
         };
@@ -81,7 +81,7 @@ impl FileOps {
                 Ok(val) => val,
                 Err(e) => panic!("Error initializing data file: {}", e),
             };
-            match fs::write(KEYPAIRS_PATH, kp) {
+            match fs::write(KEYPAIRS_PATH.as_path(), kp) {
                 Ok(_) => {}
                 Err(e) => panic!("Failed to write keypairs.json: {}", e),
             };
@@ -90,7 +90,7 @@ impl FileOps {
                 Ok(val) => val,
                 Err(e) => panic!("Error initializing data file: {}", e),
             };
-            match fs::write(WALLETS_PATH, w) {
+            match fs::write(WALLETS_PATH.as_path(), w) {
                 Ok(_) => {}
                 Err(e) => panic!("Failed to write wallets.json: {}", e),
             };
@@ -105,7 +105,7 @@ impl FileOps {
     ///
     /// # Args
     /// ```
-    /// path -> &str path slice
+    /// path -> &Path path slice
     /// base -> &str slice of base struct name
     /// obj  -> an object T that implements Serialize
     /// ```
@@ -113,14 +113,14 @@ impl FileOps {
     /// # Returns
     /// Nothing
     ///
-    pub fn write<T: Serialize>(path: &str, base: &str, obj: T) {
+    pub fn write<T: Serialize>(path: &Path, base: &str, obj: T) {
         // convert the obj into a serde_json::Value
         let value = match to_value(&obj) {
             Ok(val) => val,
             Err(_) => Value::String(String::from("result: failed")),
         };
         if value.as_str() == Some("result: failed") {
-            println!("Failed to convert file at '{}' to JSON string", path);
+            println!("Failed to convert file at '{:?}' to JSON string", path);
         } else {
             // parse data from base file
             let mut base_data = FileOps::parse(path);
@@ -151,7 +151,7 @@ impl FileOps {
     /// # Returns
     /// Nothing
     pub fn write_balance(address: String, balance: i32) {
-        let mut base_data = FileOps::parse(WALLETS_PATH);
+        let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
             None => panic!("Wallet data not found, has the file been moved or deleted?"),
@@ -160,7 +160,7 @@ impl FileOps {
             if wallet["address"].to_string() == address {
                 if let Ok(value) = to_value(balance) {
                     wallet["balance"] = value;
-                    match fs::write(WALLETS_PATH, base_data.to_string()) {
+                    match fs::write(WALLETS_PATH.as_path(), base_data.to_string()) {
                         Ok(_) => {}
                         Err(e) => panic!("Failed to write file: {}", e),
                     };
@@ -179,14 +179,14 @@ impl FileOps {
     ///
     /// # Args
     /// ```
-    /// path -> &str path slice
+    /// path -> &Path path slice
     /// ```
     ///
     /// # Returns
     /// ```
     /// Value
     /// ```
-    pub fn parse(path: &str) -> Value {
+    pub fn parse(path: &Path) -> Value {
         let json_str = match fs::read_to_string(Path::new(path)) {
             Ok(content) => content,
             Err(e) => panic!("Error reading file content: {}", e),
