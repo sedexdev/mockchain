@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::path::Path;
 use std::str;
 
 // 3rd party crates
@@ -16,8 +17,12 @@ use serde::Serialize;
 use sha256::digest;
 
 // imports
-use super::constants::{DELIMITER, KEYPAIRS_PATH};
 use super::file::FileOps;
+use crate::KEYPAIRS_PATH;
+
+// hash delimiter
+#[allow(dead_code)]
+pub const DELIMITER: &str = "-%-";
 
 /// Defines a KeyPair object for storing private and public keys
 ///
@@ -88,7 +93,7 @@ impl KeyPair {
     /// String
     /// ```
     pub fn get_key(name: String, key: String) -> String {
-        let mut base_data = FileOps::parse(KEYPAIRS_PATH);
+        let mut base_data = FileOps::parse(KEYPAIRS_PATH.as_path());
         let keypairs = match base_data["keypairs"].as_array_mut() {
             Some(data) => data,
             None => panic!("Key pair data not found, has the file been moved or deleted?"),
@@ -102,7 +107,7 @@ impl KeyPair {
                 return k[id].to_string().replace("\"", "");
             }
         }
-        format!("No keypair found under {name}").to_string()
+        format!("No key pair found under {name}").to_string()
     }
 
     /// Signs a transaction on the blockchain using
@@ -274,14 +279,14 @@ pub fn hash_transaction(from_address: &String, to_address: &String, amount: &Str
 ///
 /// # Args
 /// ```
-/// path: &str -> path to read transactions from
+/// path: &Path -> path to read transactions from
 /// ```
 ///
 /// # Returns
 /// ```
 /// String
 /// ```
-pub fn get_merkle_root(path: &str) -> String {
+pub fn get_merkle_root(path: &Path) -> String {
     let mut base_data = FileOps::parse(path);
     let transactions = match base_data["transactions"].as_array_mut() {
         Some(data) => data,

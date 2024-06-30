@@ -4,15 +4,13 @@ use chrono::Utc;
 // imports
 use super::{
     block::Block,
-    constants::{
-        BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH,
-    },
     crypto::{get_merkle_root, hash_block, hash_transaction, KeyPair},
     file::FileOps,
     signing_data::Signing,
     transaction::Transaction,
     wallet::Wallet,
 };
+use crate::{BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH};
 
 /// Creates a wallet
 ///
@@ -33,8 +31,8 @@ pub fn create_wallet(name: String) {
         address,
         balance: 0,
     };
-    FileOps::write(KEYPAIRS_PATH, "keypairs", key_pair);
-    FileOps::write(WALLETS_PATH, "wallets", wallet);
+    FileOps::write(KEYPAIRS_PATH.as_path(), "keypairs", key_pair);
+    FileOps::write(WALLETS_PATH.as_path(), "wallets", wallet);
 }
 
 /// Creates a Transaction
@@ -66,7 +64,7 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
     let hash = hash_transaction(&from_address, &to_address, &amount.to_string());
 
     // get senders private key
-    let mut json_data = FileOps::parse(KEYPAIRS_PATH);
+    let mut json_data = FileOps::parse(KEYPAIRS_PATH.as_path());
     let key_data = match json_data["keypairs"].as_array_mut() {
         Some(arr) => arr,
         None => panic!("Failed to read key data from 'keypairs.json'"),
@@ -104,8 +102,8 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
     };
 
     // write objects to file
-    FileOps::write(TRANSACTIONS_PATH, "transactions", transaction);
-    FileOps::write(SIGNING_DATA_PATH, "signing_data", signing_data);
+    FileOps::write(TRANSACTIONS_PATH.as_path(), "transactions", transaction);
+    FileOps::write(SIGNING_DATA_PATH.as_path(), "signing_data", signing_data);
 }
 
 /// Mine the next block in the chain
@@ -121,7 +119,7 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
 ///
 /// Nothing
 pub fn mine_block(name: String) {
-    let mut base_data = FileOps::parse(BLOCKCHAIN_PATH);
+    let mut base_data = FileOps::parse(BLOCKCHAIN_PATH.as_path());
     let blockchain = match base_data["blockchain"].as_array_mut() {
         Some(data) => data,
         None => panic!("Failed to parse blockchain data from 'blockchain.json'"),
@@ -131,7 +129,7 @@ pub fn mine_block(name: String) {
     // components of Block hash
     let mut nonce = 0;
     let previous_hash = &last_block["hash"].to_string().replace("\"", "");
-    let mut base_data = FileOps::parse(TRANSACTIONS_PATH);
+    let mut base_data = FileOps::parse(TRANSACTIONS_PATH.as_path());
     // set mining difficulty
     let leading_zeros = String::from("0".repeat(2));
     // get block hash
@@ -156,7 +154,7 @@ pub fn mine_block(name: String) {
     let timestamp = now.to_rfc3339();
 
     // get the merkle root of this Blocks Transactions
-    let merkle_root = get_merkle_root(TRANSACTIONS_PATH);
+    let merkle_root = get_merkle_root(TRANSACTIONS_PATH.as_path());
 
     // pay all transactions
     let transactions = match base_data["transactions"].as_array_mut() {
@@ -189,7 +187,7 @@ pub fn mine_block(name: String) {
         merkle_root,
     };
 
-    FileOps::write(BLOCKCHAIN_PATH, "blockchain", block);
+    FileOps::write(BLOCKCHAIN_PATH.as_path(), "blockchain", block);
     Transaction::clear();
     Transaction::add_reward(name);
 }
@@ -207,7 +205,7 @@ pub fn mine_block(name: String) {
 /// bool
 /// ```
 pub fn verify_chain() -> bool {
-    let mut bc_base_data = FileOps::parse(BLOCKCHAIN_PATH);
+    let mut bc_base_data = FileOps::parse(BLOCKCHAIN_PATH.as_path());
     let blockchain = match bc_base_data["blockchain"].as_array_mut() {
         Some(data) => data,
         None => panic!("Failed to parse blockchain data from 'blockchain.json'"),
@@ -255,7 +253,7 @@ pub fn verify_chain() -> bool {
             }
 
             // get signing key for this transaction
-            let mut sd_base_data = FileOps::parse(SIGNING_DATA_PATH);
+            let mut sd_base_data = FileOps::parse(SIGNING_DATA_PATH.as_path());
             let signing_data = match sd_base_data["signing_data"].as_array_mut() {
                 Some(data) => data,
                 None => panic!("Failed to parse signing data from 'signing.json'"),
