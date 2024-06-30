@@ -15,7 +15,8 @@ use dirs::home_dir;
 use mods::{
     block::Block,
     file::FileOps,
-    helpers::{create_transaction, create_wallet, mine_block, verify_chain},
+    helpers::{create_transaction, create_wallet, get_timestamp, mine_block, verify_chain},
+    log::{Log, LogLevel},
     messaging::{display_msg, Message},
     repl::Repl,
     wallet::Wallet,
@@ -36,6 +37,11 @@ lazy_static! {
 lazy_static! {
     #[derive(Debug)]
     static ref DATA_PATH: PathBuf = HOME.as_path().join(".mockchain").join("data");
+}
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref LOG_PATH: PathBuf = HOME.as_path().join(".mockchain").join("log");
 }
 
 lazy_static! {
@@ -63,8 +69,21 @@ lazy_static! {
     static ref WALLETS_PATH: PathBuf = DATA_PATH.as_path().join("wallets.json");
 }
 
+lazy_static! {
+    #[derive(Debug)]
+    static ref LOG_FILE_PATH: PathBuf = LOG_PATH.as_path().join("log.txt");
+}
+
 fn main() {
     if !Path::new(BLOCKCHAIN_PATH.as_path()).exists() {
+        Log::init();
+
+        Log::record(&Log::new(
+            LogLevel::INFO,
+            get_timestamp(),
+            Log::get_log_message(1),
+        ));
+
         FileOps::init(false);
 
         // sleep to allow init

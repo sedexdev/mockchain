@@ -12,6 +12,24 @@ use super::{
 };
 use crate::{BLOCKCHAIN_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH};
 
+/// Gets an RFC3339 timestamp
+///
+/// # Visibility
+/// public
+///
+/// # Args
+/// None
+///
+/// # Returns
+/// ```
+/// String
+/// ```
+pub fn get_timestamp() -> String {
+    let now = Utc::now();
+    let timestamp = now.to_rfc3339();
+    timestamp
+}
+
 /// Creates a wallet
 ///
 /// # Visibility
@@ -150,8 +168,7 @@ pub fn mine_block(name: String) {
     }
 
     // get the current timestamp
-    let now = Utc::now();
-    let timestamp = now.to_rfc3339();
+    let timestamp = get_timestamp();
 
     // get the merkle root of this Blocks Transactions
     let merkle_root = get_merkle_root(TRANSACTIONS_PATH.as_path());

@@ -3,6 +3,7 @@ pub mod block;
 pub mod crypto;
 pub mod file;
 pub mod helpers;
+pub mod log;
 pub mod messaging;
 pub mod repl;
 pub mod signing_data;
