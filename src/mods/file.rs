@@ -28,8 +28,8 @@ use crate::{
 pub struct FileOps {}
 
 impl FileOps {
-    /// Initializes the data files when a user first
-    /// runs the app or decides to re-initialize the
+    /// initialises the data files when a user first
+    /// runs the app or decides to re-initialise the
     /// blockchain
     ///
     /// # Visibility
@@ -96,7 +96,7 @@ impl FileOps {
     fn init_helper<T: Serialize>(obj: T, data_file: &Path, file_name: &str) {
         let data = match to_string(&obj) {
             Ok(val) => val,
-            Err(e) => panic!("Error initializing data file: {}.json: {}", &file_name, e),
+            Err(e) => panic!("Error initialising data file: {}.json: {}", &file_name, e),
         };
         match fs::write(data_file, data) {
             Ok(_) => {}

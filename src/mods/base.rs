@@ -1,5 +1,5 @@
 /*
-    Base structures for initializing data files
+    Base structures for initialising data files
 */
 
 // 3rd party crates

@@ -15,7 +15,7 @@ use dirs::home_dir;
 use mods::{
     block::Block,
     file::FileOps,
-    helpers::{create_transaction, create_wallet, get_timestamp, mine_block, verify_chain},
+    helpers::{create_transaction, create_wallet, mine_block, verify_chain},
     log::{Log, LogLevel},
     messaging::{display_msg, Message},
     repl::Repl,
@@ -78,19 +78,19 @@ fn main() {
     if !Path::new(BLOCKCHAIN_PATH.as_path()).exists() {
         Log::init();
 
-        Log::record(&Log::new(
-            LogLevel::INFO,
-            get_timestamp(),
-            Log::get_log_message(1),
-        ));
+        Log::new(LogLevel::INFO, 1);
 
         FileOps::init(false);
+
+        Log::new(LogLevel::INFO, 2);
 
         // sleep to allow init
         let half_sec = time::Duration::from_millis(500);
         thread::sleep(half_sec);
 
         Block::add_genesis_block();
+
+        Log::new(LogLevel::INFO, 3);
     }
 
     Repl::print_intro();
@@ -249,6 +249,27 @@ fn option3() {
 }
 
 fn option9() {
+    fn helper(preserve: bool) {
+        display_msg(Message::Success(
+            "Re-initialising blockchain...".to_string(),
+            None,
+        ));
+        FileOps::init(preserve);
+        display_msg(Message::Success(
+            "Blockchain init completed successfully".to_string(),
+            None,
+        ));
+        display_msg(Message::Success(
+            "Wallet data has been preserved".to_string(),
+            None,
+        ));
+        let msg_key: u8 = match preserve {
+            true => 4,
+            false => 5,
+        };
+        Log::new(LogLevel::WARNING, msg_key);
+    }
+
     display_msg(Message::Warning("!! This action will wipe out the current blockchain and transaction data. Continue? (y/n) ".to_string(), None));
     let wipe: String = match Repl::get_input() {
         Some(val) => val,
@@ -266,34 +287,10 @@ fn option9() {
             };
             match keep.as_str() {
                 "y" => {
-                    display_msg(Message::Success(
-                        "Re-initializing blockchain...".to_string(),
-                        None,
-                    ));
-                    FileOps::init(true);
-                    display_msg(Message::Success(
-                        "Blockchain init completed successfully".to_string(),
-                        None,
-                    ));
-                    display_msg(Message::Success(
-                        "Wallet data has been preserved".to_string(),
-                        None,
-                    ));
+                    helper(true);
                 }
                 "n" => {
-                    display_msg(Message::Success(
-                        "Re-initializing blockchain...".to_string(),
-                        None,
-                    ));
-                    FileOps::init(false);
-                    display_msg(Message::Success(
-                        "Blockchain init completed successfully".to_string(),
-                        None,
-                    ));
-                    display_msg(Message::Success(
-                        "Wallet data has been deleted".to_string(),
-                        None,
-                    ));
+                    helper(false);
                 }
                 "Invalid option" => display_msg(Message::Failure(wipe, None)),
                 _ => display_msg(Message::Failure(wipe, None)),

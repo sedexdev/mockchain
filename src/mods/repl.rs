@@ -57,7 +57,7 @@ impl Repl {
         println!("6. Display wallets");
         println!("7. Display key pairs");
         println!("8. Display signatures");
-        println!("9. Re-initialize blockchain");
+        println!("9. Re-initialise blockchain");
         println!("10. Verify blockchain");
         println!("11. Exit\n");
     }
