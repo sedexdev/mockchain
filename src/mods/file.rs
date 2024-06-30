@@ -49,52 +49,59 @@ impl FileOps {
                 Err(e) => panic!("Error creating data directory: {}", e),
             };
         }
-        let bc = match to_string(&Blockchain { blockchain: [] }) {
-            Ok(val) => val,
-            Err(e) => panic!("Error initializing data file: {}", e),
-        };
-        match fs::write(BLOCKCHAIN_PATH.as_path(), bc) {
-            Ok(_) => {}
-            Err(e) => panic!("Failed to write blockchain.json: {}", e),
-        };
 
-        let t = match to_string(&Transactions { transactions: [] }) {
-            Ok(val) => val,
-            Err(e) => panic!("Error initializing data file: {}", e),
-        };
-        match fs::write(TRANSACTIONS_PATH.as_path(), t) {
-            Ok(_) => {}
-            Err(e) => panic!("Failed to write transaction.json: {}", e),
-        };
+        FileOps::init_helper(
+            &Blockchain { blockchain: [] },
+            BLOCKCHAIN_PATH.as_path(),
+            "blockchain",
+        );
 
-        let sd = match to_string(&SigningData { signing_data: [] }) {
-            Ok(val) => val,
-            Err(e) => panic!("Error initializing data file: {}", e),
-        };
-        match fs::write(SIGNING_DATA_PATH.as_path(), sd) {
-            Ok(_) => {}
-            Err(e) => panic!("Failed to write signing.json: {}", e),
-        };
+        FileOps::init_helper(
+            &Transactions { transactions: [] },
+            TRANSACTIONS_PATH.as_path(),
+            "transactions",
+        );
+
+        FileOps::init_helper(
+            &SigningData { signing_data: [] },
+            SIGNING_DATA_PATH.as_path(),
+            "signing",
+        );
 
         if !preserve_accounts {
-            let kp = match to_string(&KeyPairs { keypairs: [] }) {
-                Ok(val) => val,
-                Err(e) => panic!("Error initializing data file: {}", e),
-            };
-            match fs::write(KEYPAIRS_PATH.as_path(), kp) {
-                Ok(_) => {}
-                Err(e) => panic!("Failed to write keypairs.json: {}", e),
-            };
+            FileOps::init_helper(
+                &KeyPairs { keypairs: [] },
+                KEYPAIRS_PATH.as_path(),
+                "keypairs",
+            );
 
-            let w = match to_string(&Wallets { wallets: [] }) {
-                Ok(val) => val,
-                Err(e) => panic!("Error initializing data file: {}", e),
-            };
-            match fs::write(WALLETS_PATH.as_path(), w) {
-                Ok(_) => {}
-                Err(e) => panic!("Failed to write wallets.json: {}", e),
-            };
+            FileOps::init_helper(&Wallets { wallets: [] }, &WALLETS_PATH.as_path(), "wallets");
         }
+    }
+
+    /// Init helper
+    ///
+    /// # Visibility
+    /// private
+    ///
+    /// # Args
+    /// ```
+    /// obj: T           -> object to be serialized and written
+    /// data_file: &Path -> data file path
+    /// file_name: &str  -> data file name
+    /// ```
+    ///
+    /// # Returns
+    /// Nothing
+    fn init_helper<T: Serialize>(obj: T, data_file: &Path, file_name: &str) {
+        let data = match to_string(&obj) {
+            Ok(val) => val,
+            Err(e) => panic!("Error initializing data file: {}.json: {}", &file_name, e),
+        };
+        match fs::write(data_file, data) {
+            Ok(_) => {}
+            Err(e) => panic!("Failed to write {}.json: {}", &file_name, e),
+        };
     }
 
     /// Writes the current state of the blockchain to
