@@ -7,7 +7,10 @@ use serde::Serialize;
 use serde_json::{from_str, to_string, to_value, Value};
 
 // imports
-use super::base::{Blockchain, KeyPairs, SigningData, Transactions, Wallets};
+use super::{
+    base::{Blockchain, KeyPairs, SigningData, Transactions, Wallets},
+    log::{Log, LogLevel},
+};
 use crate::{
     BLOCKCHAIN_PATH, DATA_PATH, KEYPAIRS_PATH, SIGNING_DATA_PATH, TRANSACTIONS_PATH, WALLETS_PATH,
 };
@@ -46,7 +49,13 @@ impl FileOps {
         if !Path::new(DATA_PATH.as_path()).exists() {
             match fs::create_dir_all(DATA_PATH.as_path()) {
                 Ok(_) => {}
-                Err(e) => panic!("Error creating data directory: {}", e),
+                Err(e) => {
+                    Log::new_panic(LogLevel::ERROR, 7, None);
+                    panic!(
+                        "Error creating /.mockchain/data/ directory under $HOME: {}",
+                        e
+                    );
+                }
             };
         }
 
@@ -96,11 +105,17 @@ impl FileOps {
     fn init_helper<T: Serialize>(obj: T, data_file: &Path, file_name: &str) {
         let data = match to_string(&obj) {
             Ok(val) => val,
-            Err(e) => panic!("Error initialising data file: {}.json: {}", &file_name, e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 8, Some(vec![file_name.to_string()]));
+                panic!("Error initialising data file: {}.json: {}", &file_name, e);
+            }
         };
         match fs::write(data_file, data) {
             Ok(_) => {}
-            Err(e) => panic!("Failed to write {}.json: {}", &file_name, e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 9, Some(vec![file_name.to_string()]));
+                panic!("Failed to write {}.json: {}", &file_name, e);
+            }
         };
     }
 
@@ -124,24 +139,29 @@ impl FileOps {
         // convert the obj into a serde_json::Value
         let value = match to_value(&obj) {
             Ok(val) => val,
-            Err(_) => Value::String(String::from("result: failed")),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 10, Some(vec![base.to_string()]));
+                panic!("Failed to parse given object to serde_json Value: {}", e);
+            }
         };
-        if value.as_str() == Some("result: failed") {
-            println!("Failed to convert file at '{:?}' to JSON string", path);
-        } else {
-            // parse data from base file
-            let mut base_data = FileOps::parse(path);
-            let data = match base_data[base].as_array_mut() {
-                Some(d) => d,
-                None => panic!("Data not found while writing, has the file been moved or deleted?"),
-            };
-            data.push(value);
-            // write data back to file (full overwrite with new data appended)
-            match fs::write(path, base_data.to_string()) {
-                Ok(_) => {}
-                Err(e) => panic!("Failed to write file: {}", e),
-            };
-        }
+        // parse data from base file
+        let mut base_data = FileOps::parse(path);
+        let data = match base_data[base].as_array_mut() {
+            Some(d) => d,
+            None => {
+                Log::new_panic(LogLevel::ERROR, 2, Some(vec![format!("{}.json", base)]));
+                panic!("Failed to read {}.json, has the data been modified or the file moved or deleted?", base);
+            }
+        };
+        data.push(value);
+        // write data back to file (full overwrite with new data appended)
+        match fs::write(path, base_data.to_string()) {
+            Ok(_) => {}
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 9, Some(vec![base.to_string()]));
+                panic!("Failed to write {}.json: {}", base, e);
+            }
+        };
     }
 
     /// Write a new value to the balance field of an account
@@ -161,7 +181,10 @@ impl FileOps {
         let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
-            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+            None => {
+                Log::new_panic(LogLevel::ERROR, 2, Some(vec!["wallets.json".to_string()]));
+                panic!("Failed to read wallets.json, has the data been modified or the file moved or deleted?");
+            }
         };
         for wallet in wallets {
             if wallet["address"].to_string() == address {
@@ -169,11 +192,18 @@ impl FileOps {
                     wallet["balance"] = value;
                     match fs::write(WALLETS_PATH.as_path(), base_data.to_string()) {
                         Ok(_) => {}
-                        Err(e) => panic!("Failed to write file: {}", e),
+                        Err(e) => {
+                            Log::new_panic(LogLevel::ERROR, 9, Some(vec!["wallets".to_string()]));
+                            panic!("Failed to write wallets.json: {}", e);
+                        }
                     };
                     break;
                 } else {
-                    panic!("Failed to write new balance");
+                    Log::new_panic(LogLevel::ERROR, 11, Some(vec![balance.to_string()]));
+                    panic!(
+                        "Failed to parse balance to serde_json Value; given value: {}",
+                        &balance
+                    );
                 };
             }
         }
@@ -196,11 +226,21 @@ impl FileOps {
     pub fn parse(path: &Path) -> Value {
         let json_str = match fs::read_to_string(Path::new(path)) {
             Ok(content) => content,
-            Err(e) => panic!("Error reading file content: {}", e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 12, Some(vec![format!("{:?}", path)]));
+                panic!(
+                    "Error parsing data file content at {}: {}",
+                    format!("{:?}", path),
+                    e
+                );
+            }
         };
         let value = match from_str(&json_str) {
             Ok(val) => val,
-            Err(e) => panic!("Poorly formatted JSON found: {}", e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 13, Some(vec![json_str.clone()]));
+                panic!("Poorly formatted JSON found: {}", e);
+            }
         };
         value
     }

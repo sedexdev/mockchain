@@ -88,10 +88,13 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
     Log::new(LogLevel::INFO, 21, None);
 
     // get senders private key
-    let mut json_data = FileOps::parse(KEYPAIRS_PATH.as_path());
-    let key_data = match json_data["keypairs"].as_array_mut() {
+    let mut base_data = FileOps::parse(KEYPAIRS_PATH.as_path());
+    let key_data = match base_data["keypairs"].as_array_mut() {
         Some(arr) => arr,
-        None => panic!("Failed to read key data from 'keypairs.json'"),
+        None => {
+            Log::new_panic(LogLevel::ERROR, 2, Some(vec!["keypairs.json".to_string()]));
+            panic!("Failed to read keypairs.json, has the data been modified or the file moved or deleted?");
+        }
     };
 
     let mut private_key = String::from("");
@@ -99,9 +102,12 @@ pub fn create_transaction(from: String, to: String, amount: i32) {
         if key_pair["name"] == from {
             let key_value = match key_pair["private_key"].as_str() {
                 Some(val) => val,
-                None => panic!(
-                    "Failed to parse private key from json_serde Value while creating transaction"
-                ),
+                None => {
+                    Log::new_panic(LogLevel::ERROR, 15, None);
+                    panic!(
+                        "Failed to parse private key from json_serde Value to &str while creating transaction"
+                    );
+                }
             };
             private_key.push_str(key_value);
         }
@@ -151,7 +157,14 @@ pub fn mine_block(name: String) {
     let mut base_data = FileOps::parse(BLOCKCHAIN_PATH.as_path());
     let blockchain = match base_data["blockchain"].as_array_mut() {
         Some(data) => data,
-        None => panic!("Failed to parse blockchain data from 'blockchain.json'"),
+        None => {
+            Log::new_panic(
+                LogLevel::ERROR,
+                2,
+                Some(vec!["blockchain.json".to_string()]),
+            );
+            panic!("Failed to read blockchain.json, has the data been modified or the file moved or deleted?");
+        }
     };
 
     let last_block = &blockchain[blockchain.len() - 1];
@@ -194,7 +207,14 @@ pub fn mine_block(name: String) {
     // pay all transactions
     let transactions = match base_data["transactions"].as_array_mut() {
         Some(data) => data,
-        None => panic!("Transaction data not found, has the file been moved or deleted?"),
+        None => {
+            Log::new_panic(
+                LogLevel::ERROR,
+                2,
+                Some(vec!["blockchain.json".to_string()]),
+            );
+            panic!("Failed to read blockchain.json, has the data been modified or the file moved or deleted?");
+        }
     };
 
     for t in transactions {
@@ -202,7 +222,8 @@ pub fn mine_block(name: String) {
         if let Some(val) = t["amount"].as_i64() {
             amount = val as i32;
         } else {
-            panic!("Could not parse transaction amount while mining block");
+            Log::new_panic(LogLevel::ERROR, 16, None);
+            panic!("Failed to parse transaction amount while mining block");
         };
 
         if t["from_address"] == "REWARD" {
@@ -259,7 +280,14 @@ pub fn verify_chain() -> bool {
     let mut bc_base_data = FileOps::parse(BLOCKCHAIN_PATH.as_path());
     let blockchain = match bc_base_data["blockchain"].as_array_mut() {
         Some(data) => data,
-        None => panic!("Failed to parse blockchain data from 'blockchain.json'"),
+        None => {
+            Log::new_panic(
+                LogLevel::ERROR,
+                2,
+                Some(vec!["blockchain.json".to_string()]),
+            );
+            panic!("Failed to read blockchain.json, has the data been modified or the file moved or deleted?");
+        }
     };
 
     // loop over each block in the chain
@@ -296,7 +324,16 @@ pub fn verify_chain() -> bool {
         // validate transactions
         let transactions = match current_block["transactions"]["transactions"].as_array_mut() {
             Some(data) => data,
-            None => panic!("Transaction data not found, has the file been moved or deleted?"),
+            None => {
+                Log::new_panic(
+                    LogLevel::ERROR,
+                    2,
+                    Some(vec![
+                        "transactions from block in blockchain.json".to_string()
+                    ]),
+                );
+                panic!("Failed to read transactions from block in blockchain.json, has the data been modified?");
+            }
         };
 
         for j in 0..transactions.len() {
@@ -318,7 +355,10 @@ pub fn verify_chain() -> bool {
             let mut sd_base_data = FileOps::parse(SIGNING_DATA_PATH.as_path());
             let signing_data = match sd_base_data["signing_data"].as_array_mut() {
                 Some(data) => data,
-                None => panic!("Failed to parse signing data from 'signing.json'"),
+                None => {
+                    Log::new_panic(LogLevel::ERROR, 2, Some(vec!["signing.json".to_string()]));
+                    panic!("Failed to read signing.json, has the data been modified or the file moved or deleted?");
+                }
             };
 
             // verify each hash using the signing key

@@ -17,7 +17,10 @@ use serde::Serialize;
 use sha256::digest;
 
 // imports
-use super::file::FileOps;
+use super::{
+    file::FileOps,
+    log::{Log, LogLevel},
+};
 use crate::KEYPAIRS_PATH;
 
 // hash delimiter
@@ -96,7 +99,10 @@ impl KeyPair {
         let mut base_data = FileOps::parse(KEYPAIRS_PATH.as_path());
         let keypairs = match base_data["keypairs"].as_array_mut() {
             Some(data) => data,
-            None => panic!("Key pair data not found, has the file been moved or deleted?"),
+            None => {
+                Log::new_panic(LogLevel::ERROR, 2, Some(vec!["keypairs.json".to_string()]));
+                panic!("Failed to read keypairs.json, has the data been modified or the file moved or deleted?");
+            }
         };
         for k in keypairs {
             if k["name"] == name {
@@ -129,14 +135,23 @@ impl KeyPair {
     pub fn sign(hash: &String, private_key: String) -> (String, String) {
         let key_bytes = match decode(&private_key) {
             Ok(key) => key,
-            Err(e) => panic!(
-                "Failed to decode private key while signing transaction: {}",
-                e
-            ),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 3, Some(vec![private_key.clone()]));
+                panic!(
+                    "Failed to decode private key while signing transaction: {}",
+                    e
+                );
+            }
         };
         let signing_key = match SigningKey::from_slice(key_bytes.as_slice()) {
             Ok(key) => key,
-            Err(e) => panic!("Cannot decode signing key: {}", e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 4, None);
+                panic!(
+                    "Failed to decode signing key from bytes while signing transaction: {}",
+                    e
+                );
+            }
         };
         let signature: Signature = signing_key.sign(&hash.as_bytes());
         (encode(signature.to_bytes()), encode(signing_key.to_bytes()))
@@ -185,19 +200,31 @@ impl KeyPair {
     /// ```
     pub fn extract(signature: String, signing_key: String) -> (Signature, SigningKey) {
         // decode and extract Signature and SigningKey objects
-        let sig = match decode(signature) {
+        let sig = match decode(signature.clone()) {
             Ok(bytes) => match Signature::from_slice(bytes.as_slice()) {
                 Ok(s) => s,
-                Err(e) => panic!("Cannot decode signature: {}", e),
+                Err(e) => {
+                    Log::new_panic(LogLevel::ERROR, 5, Some(vec![signature]));
+                    panic!("Cannot decode signature: {}", e);
+                }
             },
-            Err(e) => panic!("Cannot decode signature: {}", e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 5, Some(vec![signature]));
+                panic!("Cannot decode signature: {}", e);
+            }
         };
-        let sign = match decode(signing_key) {
+        let sign = match decode(signing_key.clone()) {
             Ok(bytes) => match SigningKey::from_slice(bytes.as_slice()) {
                 Ok(s) => s,
-                Err(e) => panic!("Cannot decode signing key: {}", e),
+                Err(e) => {
+                    Log::new_panic(LogLevel::ERROR, 6, Some(vec![signing_key]));
+                    panic!("Cannot decode signing key: {}", e);
+                }
             },
-            Err(e) => panic!("Cannot decode signing key: {}", e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 6, Some(vec![signing_key]));
+                panic!("Cannot decode signing key: {}", e);
+            }
         };
         (sig, sign)
     }
@@ -290,7 +317,14 @@ pub fn get_merkle_root(path: &Path) -> String {
     let mut base_data = FileOps::parse(path);
     let transactions = match base_data["transactions"].as_array_mut() {
         Some(data) => data,
-        None => panic!("Transaction data not found, has the file been moved or deleted?"),
+        None => {
+            Log::new_panic(
+                LogLevel::ERROR,
+                2,
+                Some(vec!["transactions.json".to_string()]),
+            );
+            panic!("Failed to read transactions.json, has the data been modified or the file moved or deleted?");
+        }
     };
     if transactions.len() > 0 {
         let mut hashes = Vec::new();

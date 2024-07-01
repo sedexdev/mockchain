@@ -48,6 +48,21 @@ static LOG_MESSAGE_MAP: phf::Map<u8, &str> = phf_map! {
 
 static LOG_PANIC_MAP: phf::Map<u8, &str> = phf_map! {
     1u8 => "Unable to parse genesis block transaction to json_serde {}: {}",
+    2u8 => "Failed to read {}, has the data been modified or the file moved or deleted?",
+    3u8 => "Failed to decode private key while signing transaction; given key value: {}",
+    4u8 => "Failed to decode signing key from bytes while signing transaction",
+    5u8 => "Failed to decode and extract signature; given value: {}",
+    6u8 => "Failed to decode and extract signing key; given value: {}",
+    7u8 => "Error creating /.mockchain/data/ directory under $HOME",
+    8u8 => "Error initialising data file: {}.json; could not parse given object to JSON string",
+    9u8 => "Failed to write initialisation data to {}.json",
+    10u8 => "Failed to parse given object to serde_json Value while writing {}.json",
+    11u8 => "Failed to parse balance to serde_json Value; given value: {}",
+    12u8 => "Error parsing data file content at {}",
+    13u8 => "Poorly formatted JSON found: {}",
+    14u8 => "Failed to parse empty transactions object to serde_json Value::String before clearing",
+    15u8 => "Failed to parse private key from json_serde Value to &str while creating transaction",
+    16u8 => "Failed to parse transaction amount while mining block",
 };
 
 /// Log enum with log level states

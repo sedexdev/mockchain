@@ -10,6 +10,7 @@ use super::{
     base::Transactions,
     crypto::{hash_transaction, KeyPair},
     file::FileOps,
+    log::{Log, LogLevel},
     signing_data::Signing,
 };
 use crate::{SIGNING_DATA_PATH, TRANSACTIONS_PATH};
@@ -96,14 +97,20 @@ impl Transaction {
     pub fn clear() {
         let t = match to_string(&Transactions { transactions: [] }) {
             Ok(val) => val,
-            Err(e) => panic!(
-                "Failed to parse transactions to String before clearing: {}",
-                e
-            ),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 14, None);
+                panic!(
+                    "Failed to parse transactions to String before clearing: {}",
+                    e
+                );
+            }
         };
         match fs::write(TRANSACTIONS_PATH.as_path(), t) {
             Ok(_) => {}
-            Err(e) => panic!("Failed to write 'transactions.json': {}", e),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 9, Some(vec!["transactions".to_string()]));
+                panic!("Failed to write transactions.json: {}", e);
+            }
         };
     }
 }
