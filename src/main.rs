@@ -259,14 +259,11 @@ fn option9() {
             "Blockchain init completed successfully".to_string(),
             None,
         ));
-        display_msg(Message::Success(
-            "Wallet data has been preserved".to_string(),
-            None,
-        ));
-        let msg_key: u8 = match preserve {
-            true => 4,
-            false => 5,
+        let (msg, msg_key) = match preserve {
+            true => ("Wallet data has been preserved", 4),
+            false => ("Wallet data has been deleted", 5),
         };
+        display_msg(Message::Success(msg.to_string(), None));
         Log::new(LogLevel::WARNING, msg_key);
     }
 
