@@ -35,18 +35,18 @@ This tool is educational, exposes all data to the user so they can see what is g
 # Usage
 
 - The available integer options throughout the application are:
-  - 0. Show options
-  - 1. Create a wallet
-  - 2. Mine a block
-  - 3. Add a new transaction
-  - 4. Display the blockchain
-  - 5. Display pending transactions
-  - 6. Display wallets
-  - 7. Display key pairs
-  - 8. Display signatures
-  - 9. Re-initialise blockchain
-  - 10. Verify blockchain
-  - 11. Exit
+- 0 will show the options menu
+  1. Create a wallet
+  2. Mine a block
+  3. Add a new transaction
+  4. Display the blockchain
+  5. Display pending transactions
+  6. Display wallets
+  7. Display key pairs
+  8. Display signatures
+  9. Re-initialise blockchain
+  10. Verify blockchain
+  11. Exit
 
 As a text-based, menu-driven terminal app there is only so much you can display on the screen. The following directories will be created
 under your HOME directory (currently Windows/MacOS/Linux HOME folder locations are supported using the [dirs](https://crates.io/crates/dirs) crate):
