@@ -29,11 +29,24 @@ impl Repl {
     /// # Returns
     /// Nothing
     pub fn print_intro() {
-        println!("\n\t\t\t-- WELCOME TO MOCKCHAIN --\n");
         println!(
-            "This program is a text based blockchain simulation designed to aid understanding"
+            "
+            ███╗   ███╗ ██████╗  ██████╗██╗  ██╗ ██████╗██╗  ██╗ █████╗ ██╗███╗   ██╗
+            ████╗ ████║██╔═══██╗██╔════╝██║ ██╔╝██╔════╝██║  ██║██╔══██╗██║████╗  ██║
+            ██╔████╔██║██║   ██║██║     █████╔╝ ██║     ███████║███████║██║██╔██╗ ██║
+            ██║╚██╔╝██║██║   ██║██║     ██╔═██╗ ██║     ██╔══██║██╔══██║██║██║╚██╗██║
+            ██║ ╚═╝ ██║╚██████╔╝╚██████╗██║  ██╗╚██████╗██║  ██║██║  ██║██║██║ ╚████║
+            ╚═╝     ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝                                                                     
+        "
         );
-        println!("of how blockchains work.");
+        println!("\t\t\t\t\tWELCOME TO MOCKCHAIN");
+        println!(
+            "
+            This program is a text based blockchain simulation designed to aid understanding \n
+            of how blockchains work. Improvements or bug fixes can be suggested via PR over \n
+            https://github.com/sedexdev/mockchain.git
+        "
+        );
     }
 
     /// Prints the options available in the simulation
