@@ -7,6 +7,7 @@ use super::{
     crypto::{get_merkle_root, hash_block},
     file::FileOps,
     helpers::get_timestamp,
+    log::{Log, LogLevel},
 };
 use crate::{BLOCKCHAIN_PATH, TRANSACTIONS_PATH};
 
@@ -53,17 +54,23 @@ impl Block {
         let timestamp = get_timestamp();
         let transactions = match to_string(&Value::Array([].to_vec())) {
             Ok(val) => val,
-            Err(e) => panic!(
-                "Unable to parse genesis block transaction to json_serde Value::String: {}",
-                e
-            ),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 1, Some(vec!["Value::String".to_string()]));
+                panic!(
+                    "Unable to parse genesis block transaction to json_serde Value::String: {}",
+                    e
+                )
+            }
         };
         let transactions = match to_value(transactions) {
             Ok(val) => val,
-            Err(e) => panic!(
-                "Unable to parse genesis block transaction to json_serde Value: {}",
-                e
-            ),
+            Err(e) => {
+                Log::new_panic(LogLevel::ERROR, 1, Some(vec!["Value".to_string()]));
+                panic!(
+                    "Unable to parse genesis block transaction to json_serde Value: {}",
+                    e
+                )
+            }
         };
         let hash = hash_block(
             &String::from("0"),

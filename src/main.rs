@@ -78,11 +78,11 @@ fn main() {
     if !Path::new(BLOCKCHAIN_PATH.as_path()).exists() {
         Log::init();
 
-        Log::new(LogLevel::INFO, 1);
+        Log::new(LogLevel::INFO, 1, None);
 
         FileOps::init(false);
 
-        Log::new(LogLevel::INFO, 2);
+        Log::new(LogLevel::INFO, 2, None);
 
         // sleep to allow init
         let half_sec = time::Duration::from_millis(500);
@@ -90,7 +90,7 @@ fn main() {
 
         Block::add_genesis_block();
 
-        Log::new(LogLevel::INFO, 3);
+        Log::new(LogLevel::INFO, 3, None);
     }
 
     Repl::print_intro();
@@ -264,7 +264,9 @@ fn option9() {
             false => ("Wallet data has been deleted", 5),
         };
         display_msg(Message::Success(msg.to_string(), None));
-        Log::new(LogLevel::WARNING, msg_key);
+        Log::new(LogLevel::WARNING, msg_key, None);
+        Block::add_genesis_block();
+        Log::new(LogLevel::INFO, 3, None);
     }
 
     display_msg(Message::Warning("!! This action will wipe out the current blockchain and transaction data. Continue? (y/n) ".to_string(), None));

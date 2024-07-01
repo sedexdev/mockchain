@@ -64,7 +64,7 @@ pub fn display_msg(level: Message) {
 /// Replaces {} placeholder value with vector element
 ///
 /// # Visibility
-/// private
+/// public
 ///
 /// # Args
 /// ```
@@ -76,7 +76,7 @@ pub fn display_msg(level: Message) {
 /// ```
 /// String
 /// ```
-fn replace(message: String, vec: Vec<String>) -> String {
+pub fn replace(message: String, vec: Vec<String>) -> String {
     let mut result = String::from(message);
     for value in &vec {
         if let Some(pos) = result.find("{}") {

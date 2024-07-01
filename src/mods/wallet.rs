@@ -2,7 +2,10 @@
 use serde::Serialize;
 
 // imports
-use super::file::FileOps;
+use super::{
+    file::FileOps,
+    log::{Log, LogLevel},
+};
 use crate::WALLETS_PATH;
 
 /// Defines a Wallet object with name, address, and balance
@@ -47,7 +50,10 @@ impl Wallet {
         let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
-            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+            None => {
+                Log::new_panic(LogLevel::ERROR, 2, Some(vec!["wallets.json".to_string()]));
+                panic!("Failed to read wallets.json, has the data been modified or the file moved or deleted?");
+            }
         };
         for wallet in wallets {
             if wallet["name"] == *name {
@@ -79,7 +85,10 @@ impl Wallet {
             let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
             let wallets = match base_data["wallets"].as_array_mut() {
                 Some(data) => data,
-                None => panic!("Wallet data not found, has the file been moved or deleted?"),
+                None => {
+                    Log::new_panic(LogLevel::ERROR, 2, Some(vec!["wallets.json".to_string()]));
+                    panic!("Failed to read wallets.json, has the data been modified or the file moved or deleted?");
+                }
             };
 
             let mut wallet_name = String::from("");
@@ -112,7 +121,10 @@ impl Wallet {
         let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
-            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+            None => {
+                Log::new_panic(LogLevel::ERROR, 2, Some(vec!["wallets.json".to_string()]));
+                panic!("Failed to read wallets.json, has the data been modified or the file moved or deleted?");
+            }
         };
 
         for wallet in wallets {
@@ -151,7 +163,10 @@ impl Wallet {
         let mut base_data = FileOps::parse(WALLETS_PATH.as_path());
         let wallets = match base_data["wallets"].as_array_mut() {
             Some(data) => data,
-            None => panic!("Wallet data not found, has the file been moved or deleted?"),
+            None => {
+                Log::new_panic(LogLevel::ERROR, 2, Some(vec!["wallets.json".to_string()]));
+                panic!("Failed to read wallets.json, has the data been modified or the file moved or deleted?");
+            }
         };
 
         for wallet in wallets {
