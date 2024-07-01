@@ -9,6 +9,7 @@ dirs = "5.0.1"
 hex = "0.4.3"
 lazy_static = "1.5.0"
 p256 = { version = "0.13.2", features = ["ecdsa"] }
+phf = { version = "0.11.2", features = ["macros"] }
 rand_core = "0.6.4"
 rs_merkle = "1.4.2"
 serde = { version = "1.0.203", features = ["derive"] }

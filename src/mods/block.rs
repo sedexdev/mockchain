@@ -1,5 +1,4 @@
 // 3rd party crates
-use chrono::Utc;
 use serde::Serialize;
 use serde_json::{to_string, to_value, Value};
 
@@ -7,6 +6,7 @@ use serde_json::{to_string, to_value, Value};
 use super::{
     crypto::{get_merkle_root, hash_block},
     file::FileOps,
+    helpers::get_timestamp,
 };
 use crate::{BLOCKCHAIN_PATH, TRANSACTIONS_PATH};
 
@@ -50,8 +50,7 @@ impl Block {
     /// # Returns
     /// Nothing
     pub fn add_genesis_block() {
-        let now = Utc::now();
-        let timestamp = now.to_rfc3339();
+        let timestamp = get_timestamp();
         let transactions = match to_string(&Value::Array([].to_vec())) {
             Ok(val) => val,
             Err(e) => panic!(
