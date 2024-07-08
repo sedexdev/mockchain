@@ -25,7 +25,7 @@ This tool is educational, exposes all data to the user so they can see what is g
 
 ### As a binary (TBC)
 
-- Download the appropriate binary file from [/bin](https://github.com/sedexdev/mockchain/tree/main/src/bin) for you platform
+- Download the appropriate binary file from [/bin](https://github.com/sedexdev/mockchain/tree/main/bin) for you platform
 - Add the location of the executable to your system path and run inside a terminal
 
 ### Install via Cargo (TBC)
