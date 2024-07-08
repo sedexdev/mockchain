@@ -5,6 +5,7 @@ extern crate lazy_static;
 mod mods;
 
 // std library
+use std::env::consts::OS;
 use std::path::{Path, PathBuf};
 use std::{thread, time};
 
@@ -112,7 +113,11 @@ fn main() {
                 9 => option9(),
                 10 => println!("VALID CHAIN: {}", verify_chain()),
                 11 => {
-                    println!("See you again soon! 👋 Your data files will be preserved 😃");
+                    if OS == "linux" || OS == "macos" {
+                        println!("See you again soon! 👋 Your data files will be preserved 😃");
+                    } else {
+                        println!("See you again soon! Your data files will be preserved");
+                    }
                     break;
                 }
                 _ => display_msg(Message::Failure(
