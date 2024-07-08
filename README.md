@@ -23,7 +23,7 @@ This tool is educational, exposes all data to the user so they can see what is g
 - Install [Rust](https://www.rust-lang.org/tools/install)
 - Clone this repo to your local machine and run <code>cargo run</code> in the root directory
 
-### As a binary (TBC)
+### As a binary
 
 - Download the appropriate binary file from [/bin](https://github.com/sedexdev/mockchain/tree/main/bin) for you platform
 - Add the location of the executable to your system path and run inside a terminal
