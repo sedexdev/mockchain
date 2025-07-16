@@ -45,7 +45,7 @@ cargo run
 
 ## Binaries
 
--   Binary files are available in the [bin](https://github.com/sedexdev/mockchain/tree/main/bin) directory for Windows / Linux / MacOS
+-   Binary files are available in the [bin](https://github.com/sedexdev/mockchain/tree/main/bin) directory for _Windows / Linux / MacOS_
 -   After downloading run the binary inside a terminal
 
 ```bash
@@ -89,13 +89,13 @@ Displaying output sends information to `stdout`.
 
 The following directories will be created under your HOME directory (Windows/MacOS/Linux HOME folder locations are supported using the [dirs](https://crates.io/crates/dirs) crate):
 
--   **.mockchain/data/**
+-   `.mockchain/data/`
     -   blockchain.json
     -   keypairs.json
     -   signing.json
     -   transactions.json
     -   wallets.json
--   **.mockchain/log/**
+-   `.mockchain/log/`
     -   log.txt
 
 For learning it is recommended that you read the output in these files to see what is going when you perform an action (e.g. mine a new block). The log file has more detailed descriptions of what is happening behind the scenes, while the JSON data files hold information relevant to the blockchain and the accounts associated with it.
@@ -103,7 +103,7 @@ For learning it is recommended that you read the output in these files to see wh
 # 📂 Project Structure
 
 ```
-your-repo-name/
+mockchain/
 │
 ├── assets/             # Repo header image file
 ├── bin/                # Binary executables
